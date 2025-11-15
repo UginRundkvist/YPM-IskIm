@@ -145,25 +145,26 @@ def load_data(path):
     data = np.loadtxt(path, delimiter=',')
     return data[:, 0], data[:, 1]
 
-# Главная логика
 def main():
-    # 1. Создание единичной матрицы
+    # Создание единичной матрицы
     n = int(input("Введите размер матрицы n: "))
     identity_matrix = np.eye(n)
     print("Единичная матрица:")
     print(identity_matrix)
     
-    # 2. Основной ML пайплайн
+    # Загрузка данных 
     x, y = load_data("lab1data.txt")
     x_train, y_train, x_test, y_test = Train_test(x, y, test_size=0.3)
     X_train = add_intercept(x_train)
     
-    # ИСПРАВЛЕНИЕ: передаем numpy array вместо списка
+    # 3. Обучение модели
     theta, J_hist = gradientDescent_vectorized(X_train, y_train, np.array([0, 0]))
     
- 
+    theta_path = "Theta.txt"
+    np.savetxt(theta_path, theta.reshape(1, -1), fmt="%.10f", header="theta0 theta1", comments="")
+    print(f"Параметры модели сохранены в файл: {theta_path}")
+    print(f"θ0 = {theta[0]:.6f}, θ1 = {theta[1]:.6f}")
     
-    print(f"Параметры модели: θ0 = {theta[0]:.2f}, θ1 = {theta[1]:.2f}")
     plotData(x_train, y_train, theta=theta)
     plt.show()
 
