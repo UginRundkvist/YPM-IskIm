@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, accuracy_score
 
 # 1. ФИНАНСОВЫЕ ДАННЫЕ
-print("\n1. ФИНАНСОВЫЕ ДАННЫЕ (цены акций)")
+print("ФИНАНСОВЫЕ ДАННЫЕ")
 finance_data = pd.DataFrame({
     'цена': [102, 105, 98, 107, 103, 110, 95, 108, 100, 112],
     'объем': [1200, 1500, 800, 1600, 1400, 1800, 700, 1700, 1100, 1900],
@@ -35,15 +35,15 @@ clf_fin.fit(X_train_clf, y_train_clf)
 y_pred_reg = reg_fin.predict(X_test_reg)
 y_pred_clf = clf_fin.predict(X_test_clf)
 
-print(f"Регрессия (MSE): {mean_squared_error(y_test_reg, y_pred_reg):.2f}")
-print(f"Классификация (Accuracy): {accuracy_score(y_test_clf, y_pred_clf):.2f}")
+print(f"Регрессия: {mean_squared_error(y_test_reg, y_pred_reg):.2f}")
+print(f"Классификация: {accuracy_score(y_test_clf, y_pred_clf):.2f}")
 
 
 
 
 
 # 2. МЕДИЦИНСКИЕ ДАННЫЕ
-print("\n2. МЕДИЦИНСКИЕ ДАННЫЕ (анализы пациентов)")
+print("\n2. МЕДИЦИНСКИЕ ДАННЫЕ")
 medical_data = pd.DataFrame({
     'возраст': [25, 47, 62, 33, 58, 41, 29, 53, 35, 67],
     'давление': [118, 142, 158, 124, 148, 135, 122, 146, 128, 162],
@@ -82,12 +82,12 @@ print(f"Классификация: {accuracy_score(y_test_clf, y_pred_clf):.2f}
 
 
 # 3. ДАННЫЕ НЕДВИЖИМОСТИ
-print("\n3. ДАННЫЕ НЕДВИЖИМОСТИ (характеристики квартир)")
+print("\n3. ДАННЫЕ НЕДВИЖИМОСТИ")
 real_estate_data = pd.DataFrame({
     'площадь': [48, 75, 105, 58, 92, 68, 115, 52, 88, 125],
     'комнаты': [1, 2, 3, 2, 3, 2, 4, 1, 3, 4],
     'этаж': [3, 7, 12, 2, 9, 5, 15, 1, 8, 18],
-    'цена': [52000, 78000, 145000, 62000, 95000, 72000, 168000, 48000, 92000, 185000]
+    'цена': [52, 78, 145, 62, 95, 72, 168, 48, 92, 185]
 })
 
 # Задача регрессии: предсказать цену

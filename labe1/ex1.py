@@ -1,11 +1,11 @@
-import argparse
-import sys
-import os
+# import argparse
+# import sys
+# import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def warmUpExercise(n: int): #создает единичную матрицу 2 способами
+def warmUpExercise(n: int): #создает единичную матрицу 2 способами!!
     # Способ 1: стандартный
     I_builtin = np.eye(n, dtype=float)
 
@@ -17,7 +17,7 @@ def warmUpExercise(n: int): #создает единичную матрицу 2 
 
 
 # Создает первый график
-def plotData(x, y, theta=None, title="Обучающяя выборка и регрессия"):
+def plotData(x, y, theta=None, title="Обучающяя выборка и регрессия"):#!!
     
     plt.figure(figsize=(7, 5))
     plt.scatter(x, y, c='blue', edgecolor='k', alpha=0.8, label='Данные')
@@ -35,7 +35,7 @@ def plotData(x, y, theta=None, title="Обучающяя выборка и ре�
 
 
 #Делит данные на обучающую и тестовую части в пропорции 70/30.
-def Train_test(x, y, test_size=0.3, shuffle=True, random_state=42):
+def Train_test(x, y, test_size=0.3, shuffle=True, random_state=42):#!!
     assert len(x) == len(y)
     m = len(x)
     idx = np.arange(m)
@@ -59,7 +59,7 @@ def add_intercept(x):
 #computeCost вычисляет функцию стоимости для одного параметра theta 
 
 #через циклы
-def computeCost_loop(X, y, theta):
+def computeCost_loop(X, y, theta):#!!
     m = len(y)
     cost_sum = 0.0
     for i in range(m):
@@ -82,7 +82,7 @@ def computeCost_vectorized(X, y, theta):
 
 # Градиентный спуск (три реализации)
 
-#Градиентный спуск с явными циклами. Возвращает (theta, J_history).
+#Градиентный спуск с явными циклами..
 def gradientDescent_loop(X, y, theta, alpha=1e-3, num_iters=1500):
     m = len(y)
     theta = theta.astype(float).copy()
@@ -96,9 +96,9 @@ def gradientDescent_loop(X, y, theta, alpha=1e-3, num_iters=1500):
             err = h_i - y[i]
             grad0 += err * X[i,0]
             grad1 += err * X[i,1]
-        grad0 /= m
+        grad0 /= m # усреднение
         grad1 /= m
-        # Одновременное обновление
+        # обновление
         theta0_new = theta[0] - alpha * grad0
         theta1_new = theta[1] - alpha * grad1
         theta[0], theta[1] = theta0_new, theta1_new
@@ -135,7 +135,7 @@ def gradientDescent_vectorized(X, y, theta, alpha=1e-3, num_iters=1500):
     return theta, J_history
 
 
-#Возвращает предсказание для скаляра или массива x с использованием theta
+# #Возвращает предсказание для скаляра или массива x с использованием theta
 def predict(x, theta):
     x = np.asarray(x).reshape(-1)
     return theta[0] + theta[1] * x
@@ -153,11 +153,11 @@ def main():
     print(identity_matrix)
     
     # Загрузка данных 
-    x, y = load_data("lab1data.txt")
+    x, y = load_data("lab.txt")
     x_train, y_train, x_test, y_test = Train_test(x, y, test_size=0.3)
     X_train = add_intercept(x_train)
     
-    # 3. Обучение модели
+    # Обучение модели
     theta, J_hist = gradientDescent_vectorized(X_train, y_train, np.array([0, 0]))
     
     theta_path = "Theta.txt"
