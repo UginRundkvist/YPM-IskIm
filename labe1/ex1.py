@@ -153,7 +153,7 @@ def main():
     print(identity_matrix)
     
     # Загрузка данных 
-    x, y = load_data("lab.txt")
+    x, y = load_data("/home/zerd/all/YPM-IskIm/labe1/lab1date.txt")
     x_train, y_train, x_test, y_test = Train_test(x, y, test_size=0.3)
     X_train = add_intercept(x_train)
     
