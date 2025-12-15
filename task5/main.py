@@ -18,7 +18,7 @@ def analyze_clean_data(x, y):
     return theta1_values, costs_clean, theta1_min_clean
 
 # с шумом
-def analyze_noisy_data(x, y, noise_seed=42):
+def analyze_noisy_data(x, y, noise_seed=322):
     np.random.seed(noise_seed)
     noise = np.random.uniform(-2, 2, size=y.shape)
     y_noisy = y + noise

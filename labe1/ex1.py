@@ -1,6 +1,3 @@
-# import argparse
-# import sys
-# import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -153,7 +150,7 @@ def main():
     print(identity_matrix)
     
     # Загрузка данных 
-    x, y = load_data("/home/zerd/all/YPM-IskIm/labe1/lab1date.txt")
+    x, y = load_data("/home/zerd/all/YPM-IskIm/labe1/lab1date.txt")#C:\Users\1\Desktop\IskIn\YPM-IskIm\ex1
     x_train, y_train, x_test, y_test = Train_test(x, y, test_size=0.3)
     X_train = add_intercept(x_train)
     
