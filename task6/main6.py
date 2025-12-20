@@ -75,11 +75,12 @@ def plot_features(X_original, X_norm_1, X_norm_2a, X_norm_2b):
 
 
 if __name__ == "__main__":
-    file_path = r'C:\Users\1\Desktop\IskIn\YPM-IskIm\task6\ex1data2.txt'
+    file_path = "/home/zerd/all/YPM-IskIm/task6/ex1data2.txt"
     
     try:
         data = np.loadtxt(file_path, delimiter=',')
         print(f"--- Данные '{os.path.basename(file_path)}' успешно загружены ---")
+#указание на основную программу
         print(f"Размер данных: {data.shape}")
     except Exception as e:
         print(f"Ошибка при загрузке файла: {e}")
