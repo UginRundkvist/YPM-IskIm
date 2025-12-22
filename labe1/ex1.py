@@ -89,9 +89,9 @@ def gradientDescent_loop(X, y, theta, alpha=1e-3, num_iters=1500):
         grad0 = 0.0
         grad1 = 0.0
         for i in range(m):
-            h_i = theta[0]*X[i,0] + theta[1]*X[i,1]
-            err = h_i - y[i]
-            grad0 += err * X[i,0]
+            h_i = theta[0]*X[i,0] + theta[1]*X[i,1] # предсказания модели
+            err = h_i - y[i] # ошибка предсказания 
+            grad0 += err * X[i,0] # накопление градиента
             grad1 += err * X[i,1]
         grad0 /= m # усреднение
         grad1 /= m
