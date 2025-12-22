@@ -117,7 +117,7 @@ def plot_normalized_line_graphs(X_original, X_norm_1, X_norm_2a, X_norm_2b):
 
 
 if __name__ == "__main__":
-    file_path = r"C:\Users\1\Desktop\IskIn\YPM-IskIm\task6\ex1data2.txt" # C:\Users\1\Desktop\IskIn\YPM-IskIm\task6  /home/zerd/all/YPM-IskIm/task6
+    file_path = r"/home/zerd/all/YPM-IskIm/task6/ex1data2.txt" # C:\Users\1\Desktop\IskIn\YPM-IskIm\task6  /home/zerd/all/YPM-IskIm/task6
     
     try:
         data = np.loadtxt(file_path, delimiter=',')
