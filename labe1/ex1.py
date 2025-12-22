@@ -132,10 +132,11 @@ def gradientDescent_vectorized(X, y, theta, alpha=1e-3, num_iters=1500):
     return theta, J_history
 
 
-# #Возвращает предсказание для скаляра или массива x с использованием theta
+#Возвращает предсказание для скаляра или массива x с использованием theta
 def predict(x, theta):
     x = np.asarray(x).reshape(-1)
     return theta[0] + theta[1] * x
+
 
 #читает файл и загружает данные
 def load_data(path):
@@ -150,7 +151,7 @@ def main():
     print(identity_matrix)
     
     # Загрузка данных 
-    x, y = load_data("/home/zerd/all/YPM-IskIm/labe1/lab1date.txt")#C:\Users\1\Desktop\IskIn\YPM-IskIm\ex1
+    x, y = load_data(r"C:\Users\1\Desktop\IskIn\YPM-IskIm\labe1\lab1date.txt")#C:\Users\1\Desktop\IskIn\YPM-IskIm\ex1  /home/zerd/all/YPM-IskIm/labe1/lab1date.txt
     x_train, y_train, x_test, y_test = Train_test(x, y, test_size=0.3)
     X_train = add_intercept(x_train)
     
@@ -163,7 +164,11 @@ def main():
     print(f"θ0 = {theta[0]:.6f}, θ1 = {theta[1]:.6f}")
     
     plotData(x_train, y_train, theta=theta)
-    plt.show()
+    
+    # Проверка на тестовых данных с использованием функции predict
+    predictions = predict(x_test, theta)
+    mae = np.mean(np.abs(predictions - y_test))
+    print(f"\nСредняя абсолютная ошибка на тестовых данных: {mae:.2f}")
 
 #указание на основную программу
 if __name__ == "__main__":

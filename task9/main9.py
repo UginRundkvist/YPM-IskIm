@@ -6,11 +6,9 @@ import warnings
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-
 theta = np.array([1, 0, 2, 1, 1, 0])
 
-
-def quadratic_model_output(x1, x2, theta):
+def mat_model_output(x1, x2, theta):
     theta0, theta1, theta2, theta3, theta4, theta5 = theta
     return (theta0 +
             theta1 * x1 +
@@ -19,45 +17,37 @@ def quadratic_model_output(x1, x2, theta):
             theta4 * x1**2 +
             theta5 * x2**2)
 
-
+a_values = [0.2, 0.5, 0.8]
 def calculate_logit_c(a):
     return np.log(a / (1 - a))
 
-
-
-a_values = [0.2, 0.5, 0.8]
 colors = ['blue', 'black', 'red']
 linestyles = ['--', '-', '-.']
 C_values = [calculate_logit_c(a) for a in a_values]
 
 #Сетка
-x1_min, x1_max = -20, 15
-x2_min, x2_max = -30, 20
+x1_min, x1_max = -40, 20
+x2_min, x2_max = -20, 40
 resolution = 500
 x1_grid = np.linspace(x1_min, x1_max, resolution)
 x2_grid = np.linspace(x2_min, x2_max, resolution)
 xx1, xx2 = np.meshgrid(x1_grid, x2_grid)
 
-
-Z = quadratic_model_output(xx1, xx2, theta)
-
+Z = mat_model_output(xx1, xx2, theta)
 
 plt.figure(figsize=(10, 8))
 
-
 base_cmap = plt.colormaps.get_cmap('coolwarm')
-cmap_list = [base_cmap(0.1), base_cmap(0.9)]
+cmap_list = ['green', 'red']
 custom_cmap = plt.matplotlib.colors.ListedColormap(cmap_list)
-
 
 # Заливка
 C_for_filling = calculate_logit_c(0.5)
 classification_map = (Z > C_for_filling).astype(int)
 
-# pcolormesh
 plt.pcolormesh(xx1, xx2, classification_map, cmap=custom_cmap, shading='auto', alpha=0.4)
 
-# 2. Построение границ для каждого C (поверх заливки)
+# 2. Построение границ для каждого C
 for a_val, C_val, color, style in zip(a_values, C_values, colors, linestyles):
     plt.contour(xx1, xx2, Z, levels=[C_val], colors=color, linewidths=2, linestyles=style)
 
@@ -65,18 +55,13 @@ for a_val, C_val, color, style in zip(a_values, C_values, colors, linestyles):
 if x1_min <= -2 <= x1_max:
     plt.axvline(-2, color='gray', linestyle=':', linewidth=1)
 
-    plt.text(-2.5, x2_max * 0.9, '$x_1 = -2$ (Асимптота)', color='gray', fontsize=9)
-
-
 # легенда
-plt.title(f'Полное отображение гиперболической решающей границы (Отдаленный вид)')
+plt.title(f'Отображение гиперболической границы')
 plt.xlabel('$x_1$')
 plt.ylabel('$x_2$')
 
-
 plt.xlim(x1_min, x1_max)
 plt.ylim(x2_min, x2_max)
-
 
 legend_elements = [
     Rectangle((0, 0), 1, 1, fc=custom_cmap(1), alpha=0.4, label='Класс 1 ($f > 0$)'),

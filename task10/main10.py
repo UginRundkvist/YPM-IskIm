@@ -1,149 +1,84 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
+import warnings
 
-#31 параметр
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-theta = np.array([
-    1, 0, 2, 1, 1, 0,   
-    0.1, -0.1, 0.05, 0.05, 0.02, 0.02, 0.01, 0.01, 0.01,
-    0.005, -0.005, 0.003, -0.003, 0.002, 0.002, 0.001, -0.001,
-    0.0005, -0.0005, 0.0003, -0.0003, 0.0002, 0.0002, 0.0001, -0.0001
-])
+# Исходные параметры модели
+theta_base = np.array([1, 0, 2, 1, 1, 0])
 
+# Генерируем 35 дополнительных нелинейных слагаемых с коэффициентами от -2 до 2
+np.random.seed(42)
+theta_extra = np.random.uniform(-2, 2, 35)
 
+# Объединяем все коэффициенты
+theta = np.concatenate([theta_base, theta_extra])
 
-#theta = np.array([1 for i in range(31)])
+# Функция модели с 35 дополнительными слагаемыми
+def mat_model_output_extended(x1, x2, theta):
+    # первые 6 слагаемых
+    val = theta[0] + theta[1]*x1 + theta[2]*x2 + theta[3]*x1*x2 + theta[4]*x1**2 + theta[5]*x2**2
+    
+    # дополнительные 35 слагаемых
+    powers = [
+        (3,0),(0,3),(2,1),(1,2),(4,0),(0,4),(3,1),(1,3),(2,2),(5,0),
+        (0,5),(4,1),(1,4),(3,2),(2,3),(6,0),(0,6),(5,1),(1,5),(4,2),
+        (2,4),(3,3),(7,0),(0,7),(6,1),(1,6),(5,2),(2,5),(4,3),(3,4),
+        (2,5),(1,6),(0,7),(7,0),(6,1)
+    ]
+    for coef, (i,j) in zip(theta[6:], powers):
+        val += coef * (x1**i) * (x2**j)
+    return val
 
+# Пороги
+def calculate_logit_c(a):
+    return np.log(a / (1 - a))
 
-# a
-a_values = [0.5, 0.8, 0.2]
+a_values = [0.2, 0.5, 0.8]
+colors = ['blue', 'black', 'red']
+linestyles = ['--', '-', '-.']
+C_values = [calculate_logit_c(a) for a in a_values]
 
-def calculate_K(a):
-    if a <= 0 or a >= 1:
-        return np.nan
-    return np.log((1 - a) / a)
+# Сетка
+x1_min, x1_max = -5, 5
+x2_min, x2_max = -5, 5
+resolution = 500
+x1_grid = np.linspace(x1_min, x1_max, resolution)
+x2_grid = np.linspace(x2_min, x2_max, resolution)
+xx1, xx2 = np.meshgrid(x1_grid, x2_grid)
 
-K_values = [calculate_K(a) for a in a_values]
+# Вычисляем модель
+Z = mat_model_output_extended(xx1, xx2, theta)
 
-# --- (30 слагаемых) ---
-def polynomial_grid(x1, x2, theta):
-    res = (theta[0] +
-           theta[1] * x1 +
-           theta[2] * x2 +
-           theta[3] * x1 * x2 +
-           theta[4] * x1**2 +
-           theta[5] * x2**2)
-
-    res += theta[6] * x1**3
-    res += theta[7] * x2**3
-    res += theta[8] * (x1**2) * x2
-    res += theta[9] * x1 * (x2**2)
-    res += theta[10] * x1**4
-    res += theta[11] * x2**4
-    res += theta[12] * (x1**3) * x2
-    res += theta[13] * x1 * (x2**3)
-    res += theta[14] * (x1**2) * (x2**2)
-    res += theta[15] * x1**5
-    res += theta[16] * x2**5
-    res += theta[17] * (x1**4) * x2
-    res += theta[18] * x1 * (x2**4)
-    res += theta[19] * (x1**3) * (x2**2)
-    res += theta[20] * (x1**2) * (x2**3)
-    res += theta[21] * x1**6
-    res += theta[22] * x2**6
-    res += theta[23] * (x1**5) * x2
-    res += theta[24] * x1 * (x2**5)
-    res += theta[25] * (x1**4) * (x2**2)
-    res += theta[26] * (x1**2) * (x2**4)
-    res += theta[27] * (x1**3) * (x2**3)
-    res += theta[28] * x1**7
-    res += theta[29] * x2**7
-    res += theta[30] * (x1**6) * x2
-
-    return res
-
-# --- Решение уравнения по x2 ---
-def find_roots_for_x1(x1_val, K, theta):
-    # коэффициенты для многочлена по x2
-    c7 = theta[29]
-    c6 = theta[22]
-    c5 = theta[16] + theta[24] * x1_val
-    c4 = theta[11] + theta[18] * x1_val + theta[26] * (x1_val**2)
-    c3 = theta[7] + theta[13] * x1_val + theta[20] * (x1_val**2) + theta[27] * (x1_val**3)
-    c2 = theta[5] + theta[9] * x1_val + theta[14] * (x1_val**2) + theta[19] * (x1_val**3) + theta[25] * (x1_val**4)
-    c1 = (theta[2] +
-          theta[3] * x1_val +
-          theta[8] * (x1_val**2) +
-          theta[12] * (x1_val**3) +
-          theta[17] * (x1_val**4) +
-          theta[23] * (x1_val**5))
-    c0 = (theta[0] +
-          theta[1] * x1_val +
-          theta[4] * (x1_val**2) +
-          theta[6] * (x1_val**3) +
-          theta[10] * (x1_val**4) +
-          theta[15] * (x1_val**5) +
-          theta[21] * (x1_val**6) +
-          theta[28] * (x1_val**7) +
-          theta[30] * (x1_val**6) * x1_val - K)
-
-    coeffs = [c7, c6, c5, c4, c3, c2, c1, c0]
-    roots = np.roots(coeffs)
-    real_roots = roots[np.isreal(roots)].real
-    return real_roots
-
-# точки по x1
-lines_data = {}
-x_min, x_max = -5.0, 5.0
-y_min, y_max = -8.0, 8.0
-x_scan = np.linspace(x_min, x_max, 5000)
-
-for a, K in zip(a_values, K_values):
-    x_points, y_points = [], []
-    for x_val in x_scan:
-        roots = find_roots_for_x1(x_val, K, theta)
-        for r in roots:
-            if y_min <= r <= y_max:
-                x_points.append(x_val)
-                y_points.append(r)
-    lines_data[a] = (x_points, y_points)
-
-# --- Визуализация ---
 plt.figure(figsize=(10, 8))
-plt.title(r'Линии уровня и Области Классификации', fontsize=14)
-plt.xlabel('x_1', fontsize=12)
-plt.ylabel('x_2', fontsize=12)
 
-xx, yy = np.meshgrid(np.linspace(x_min, x_max, 400),
-                     np.linspace(y_min, y_max, 400))
+# Заливка областей классов по порогу a=0.5
+C_fill = calculate_logit_c(0.5)
+classification_map = (Z > C_fill).astype(int)
+plt.contourf(xx1, xx2, classification_map, levels=[-0.1,0.5,1.1], colors=['green','red'], alpha=0.4)
 
-Z_raw = polynomial_grid(xx, yy, theta)
-Z_class = np.where(Z_raw >= 0, 1, 0)
+# Построение линий уровня для каждого порога
+for a_val, C_val, color, style in zip(a_values, C_values, colors, linestyles):
+    plt.contour(xx1, xx2, Z, levels=[C_val], colors=color, linewidths=2, linestyles=style)
 
-colors_fill = ['#dceeff', '#ffdcdc']
-plt.pcolormesh(xx, yy, Z_class,
-               cmap=plt.matplotlib.colors.ListedColormap(colors_fill),
-               shading='auto', alpha=0.6, zorder=1) #заливка
+# Настройки графика
+plt.title('Расширенная модель с 35 нелинейными слагаемыми')
+plt.xlabel('$x_1$')
+plt.ylabel('$x_2$')
+plt.xlim(x1_min, x1_max)
+plt.ylim(x2_min, x2_max)
+plt.grid(True, linestyle='--', alpha=0.6)
 
-plt.plot([], [], color='#ffdcdc', linewidth=10, label=r'Область Класса 1 (P ≥ 0)', alpha=0.7)
-plt.plot([], [], color='#dceeff', linewidth=10, label=r'Область Класса 0 (P < 0)', alpha=0.7)
+# Легенда
+legend_elements = [
+    Rectangle((0,0),1,1,fc='red', alpha=0.4, label='Класс 1 ($f > 0$)'),
+    Rectangle((0,0),1,1,fc='green', alpha=0.4, label='Класс 0 ($f < 0$)')
+] + [
+    Line2D([0],[0], color=c, lw=2, linestyle=s, label=f'Граница $a={v}$ ($C={C_val:.2f}$)')
+    for v, C_val, c, s in zip(a_values, C_values, colors, linestyles)
+]
 
-colors = {0.5: 'black', 0.8: 'blue', 0.2: 'red'}
-labels = {0.5: 'Граница (a=0.5)', 0.8: 'P=0.8 (a=0.8)', 0.2: 'P=0.2 (a=0.2)'}
-
-for a in a_values:
-    xp, yp = lines_data[a]
-    plt.scatter(xp, yp, s=2, color=colors[a], label=labels[a], zorder=10)
-
-plt.xlim(x_min, x_max)
-plt.ylim(y_min, y_max)
-
-leg = plt.legend(loc='upper right', framealpha=0.9)
-for lh in leg.legend_handles:
-    if isinstance(lh, plt.matplotlib.lines.Line2D):
-        lh.set_linewidth(2)
-    else:
-        lh._sizes = [30]
-
-plt.grid(True, linestyle='--', alpha=0.4, zorder=0)
+plt.legend(handles=legend_elements, loc='upper right', fontsize='small')
 plt.show()
