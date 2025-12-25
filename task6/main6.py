@@ -75,9 +75,35 @@ def plot_features(X_original, X_norm_1, X_norm_2a, X_norm_2b):
     plt.tight_layout()
     plt.show()
 
+# НОВАЯ ФУНКЦИЯ: 4 графика зависимости X2 от X1
+def plot_feature_dependencies(X_original, X_norm_1, X_norm_2a, X_norm_2b):
+    
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    axes = axes.flatten()
+    
+    datasets = [
+        ("Исходные данные", X_original),
+        ("Нормирование по максимуму", X_norm_1),
+        ("Нормирование по диапазону", X_norm_2a),
+        ("Z-score нормирование", X_norm_2b)
+    ]
+    
+    for idx, (title, data) in enumerate(datasets):
+        ax = axes[idx]
+        
+        ax.scatter(data[:, 0], data[:, 1], alpha=0.7, s=20)
+        ax.set_xlabel('X1')
+        ax.set_ylabel('X2')
+        ax.set_title(title)
+        ax.grid(True, alpha=0.3)
+    
+    plt.suptitle('Зависимость X2 от X1', fontsize=14)
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
 
-    data = np.loadtxt(r"/home/zerd/all/YPM-IskIm/task6/ex1data2.txt", delimiter=',')
+    data = np.loadtxt(r"C:\Users\1\Desktop\IskIn\YPM-IskIm\task6\ex1data2.txt", delimiter=',') # C:\Users\1\Desktop\IskIn\YPM-IskIm  /home/zerd/all/YPM-IskIm/task6/ex1data2.txt
     print("--- Данные 'ex1data2.txt' успешно загружены ---")
 
     X_original = data[:, :2]
@@ -94,8 +120,4 @@ if __name__ == "__main__":
 
     plot_features(X_original, X_norm_1_max, X_norm_2a_range, X_norm_2b_zscore)
 
-
-# if __name__ == "__main__":
-#     file_path = r"/home/zerd/all/YPM-IskIm/task6/ex1data2.txt" # C:\Users\1\Desktop\IskIn\YPM-IskIm\task6  /home/zerd/all/YPM-IskIm/task6
-    
-   
+    plot_feature_dependencies(X_original, X_norm_1_max, X_norm_2a_range, X_norm_2b_zscore)

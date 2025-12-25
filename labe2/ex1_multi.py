@@ -7,7 +7,7 @@ from normalEqn import normalEqn
 from computeCostMulti import computeCostMulti
 
 # Загрузка данных
-data = np.loadtxt(r"/home/zerd/all/YPM-IskIm/labe1/lab1date.txt", delimiter=',')
+data = np.loadtxt(r"C:\Users\1\Desktop\IskIn\YPM-IskIm\labe2\ex1data2.txt", delimiter=',') # C:\Users\1\Desktop\IskIn\YPM-IskIm>   "/home/zerd/all/YPM-IskIm/labe1/lab1date.txt"
 
 X = data[:, 0:2]  # Кол-во передач и скорость двигателя
 y = data[:, 2]    # Стоимость трактора
