@@ -103,7 +103,7 @@ def plot_feature_dependencies(X_original, X_norm_1, X_norm_2a, X_norm_2b):
 
 if __name__ == "__main__":
 
-    data = np.loadtxt(r"C:\Users\1\Desktop\IskIn\YPM-IskIm\task6\ex1data2.txt", delimiter=',') # C:\Users\1\Desktop\IskIn\YPM-IskIm  /home/zerd/all/YPM-IskIm/task6/ex1data2.txt
+    data = np.loadtxt(r"/home/zerd/all/YPM-IskIm/task6/ex1data2.txt", delimiter=',') # C:\Users\1\Desktop\IskIn\YPM-IskIm  /home/zerd/all/YPM-IskIm/task6/ex1data2.txt
     print("--- Данные 'ex1data2.txt' успешно загружены ---")
 
     X_original = data[:, :2]

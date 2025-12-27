@@ -7,7 +7,7 @@ from normalEqn import normalEqn
 from computeCostMulti import computeCostMulti
 
 # Загрузка данных
-data = np.loadtxt(r"C:\Users\1\Desktop\IskIn\YPM-IskIm\labe2\ex1data2.txt", delimiter=',') # C:\Users\1\Desktop\IskIn\YPM-IskIm>   "/home/zerd/all/YPM-IskIm/labe1/lab1date.txt"
+data = np.loadtxt(r"/home/zerd/all/YPM-IskIm/labe2/ex1data2.txt", delimiter=',') # C:\Users\1\Desktop\IskIn\YPM-IskIm>   "/home/zerd/all/YPM-IskIm/labe2/ex1data2.txt"
 
 X = data[:, 0:2]  # Кол-во передач и скорость двигателя
 y = data[:, 2]    # Стоимость трактора
@@ -21,7 +21,7 @@ X_norm_bias = np.c_[np.ones(m), X_norm]
 
 # Начальные параметры для градиентного спуска
 alpha = 0.01
-num_iters = 400
+num_iters = 1500
 theta = np.zeros(3)
 
 # Градиентный спуск
