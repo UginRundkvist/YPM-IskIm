@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Чтение и нормализация данных
-data = np.loadtxt("ex2data1.txt", delimiter=",") #/home/zerd/all/YPM-IskIm/labe4/ex2data1.txt
+data = np.loadtxt("/home/zerd/all/YPM-IskIm/labe4/ex2data1.txt", delimiter=",") #/home/zerd/all/YPM-IskIm/labe4/ex2data1.txt
 X_raw = data[:, :2]
 y = data[:, 2]
 
