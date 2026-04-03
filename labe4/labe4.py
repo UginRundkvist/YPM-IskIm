@@ -6,7 +6,7 @@ import pickle
 MODEL_FILE = "trained_models.pkl"
 
 def train_models():
-    data = np.loadtxt("C:/Users/1/Desktop/IskIn/YPM-IskIm/labe4/ex2data1.txt", delimiter=",")
+    data = np.loadtxt("/home/zerd/all/YPM-IskIm/labe4/ex2data1.txt", delimiter=",")
     X_raw = data[:, :2]
     y = data[:, 2]
 
