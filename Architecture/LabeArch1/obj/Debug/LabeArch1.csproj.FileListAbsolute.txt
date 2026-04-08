@@ -1,0 +1,9 @@
+D:\all\МИИТ\Architec\LabeArch1\obj\Debug\LabeArch1.csproj.AssemblyReference.cache
+D:\all\МИИТ\Architec\LabeArch1\obj\Debug\SortingLab.Form1.resources
+D:\all\МИИТ\Architec\LabeArch1\obj\Debug\LabeArch1.Properties.Resources.resources
+D:\all\МИИТ\Architec\LabeArch1\obj\Debug\LabeArch1.csproj.GenerateResource.cache
+D:\all\МИИТ\Architec\LabeArch1\obj\Debug\LabeArch1.csproj.CoreCompileInputs.cache
+D:\all\МИИТ\Architec\LabeArch1\bin\Debug\LabeArch1.exe
+D:\all\МИИТ\Architec\LabeArch1\bin\Debug\LabeArch1.pdb
+D:\all\МИИТ\Architec\LabeArch1\obj\Debug\LabeArch1.exe
+D:\all\МИИТ\Architec\LabeArch1\obj\Debug\LabeArch1.pdb
