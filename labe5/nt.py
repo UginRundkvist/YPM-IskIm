@@ -1,16 +1,31 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-N = 5
+N = 21  # теперь 21
 
-def features_variant_2(x):
-    features = x[:, 0:1]
+def features_variant_2_fast(x):
+    """Быстрая генерация полиномиальных признаков для N=21"""
+    m = x.shape[0]
     x1 = x[:, 1:2]
     x2 = x[:, 2:3]
-    for degree_1 in range(0, N + 1):
-        for degree_2 in range(0, N + 1):
-            features = np.hstack([features, (x1 ** degree_1) * (x2 ** degree_2)])
-    return features
+    
+    # Предвычисляем все степени (эффективнее, чем считать каждый раз)
+    x1_powers = [np.ones((m, 1))]
+    x2_powers = [np.ones((m, 1))]
+    
+    for d in range(1, N + 1):
+        x1_powers.append(x1_powers[-1] * x1)  # степень d = степень d-1 * x1
+        x2_powers.append(x2_powers[-1] * x2)
+    
+    # Собираем признаки
+    features = [x[:, 0:1]]  # bias
+    for i in range(N + 1):
+        for j in range(N + 1):
+            if i == 0 and j == 0:
+                continue
+            features.append(x1_powers[i] * x2_powers[j])
+    
+    return np.hstack(features)
 
 def sigmoid(z):
     z = np.clip(z, -500, 500)
@@ -24,8 +39,7 @@ def cost_gradient(theta, features, y, lambda_1, lambda_2):
     return grad
 
 def train(x, y, iterations, alpha, lambda_1, lambda_2):
-    # Генерация признаков
-    features = features_variant_2(x)
+    features = features_variant_2_fast(x)
     
     # Нормализация
     nu = np.zeros((features.shape[1], 1))
@@ -38,7 +52,6 @@ def train(x, y, iterations, alpha, lambda_1, lambda_2):
     sigma[sigma == 0] = 1
     features = diff / sigma.T
     
-    # Обучение
     theta = np.zeros((features.shape[1], 1))
     for _ in range(iterations):
         theta -= alpha * cost_gradient(theta, features, y, lambda_1, lambda_2)
@@ -46,10 +59,9 @@ def train(x, y, iterations, alpha, lambda_1, lambda_2):
     return theta, nu, sigma
 
 def predict(x, theta, nu, sigma):
-    features = features_variant_2(x)
+    features = features_variant_2_fast(x)
     features = (features - nu.T) / sigma.T
-    z = np.dot(features, theta)
-    return sigmoid(z)
+    return sigmoid(np.dot(features, theta))
 
 # ============ ОСНОВНАЯ ЧАСТЬ ============
 with open("C:/Users/1/Desktop/IskIn/YPM-IskIm/labe5/data.txt", "r") as file:
@@ -64,25 +76,31 @@ theta, nu, sigma = train(x, y, 5000, 0.01, 0.0001, 0.0001)
 fig = plt.figure()
 ax = fig.add_subplot()
 
-for i in range(x.shape[0]):
-    color = "red" if y[i, 0] > 0.5 else "green"
-    ax.scatter(x[i, 1], x[i, 2], c=color, marker="x")
+faulty = y[:, 0] > 0.5
+working = y[:, 0] <= 0.5
 
-# Граница решения
+ax.scatter(x[faulty, 1], x[faulty, 2], c="red", marker="o", label="Неисправен")
+ax.scatter(x[working, 1], x[working, 2], c="green", marker="o", label="Исправен")
+
+# БЫСТРАЯ визуализация границы решения
 x1_linspace = np.linspace(-4, 4, 150)
 x2_linspace = np.linspace(-4, 4, 150)
 x1_space, x2_space = np.meshgrid(x1_linspace, x2_linspace)
-z_space = np.zeros_like(x1_space)
 
-for i in range(x1_space.shape[0]):
-    for j in range(x1_space.shape[1]):
-        z_space[i, j] = predict(np.array([[1, x1_space[i, j], x2_space[i, j]]]), theta, nu, sigma)[0, 0]
+# Векторизованное предсказание
+X_grid = np.column_stack([
+    np.ones(x1_space.size),
+    x1_space.ravel(),
+    x2_space.ravel()
+])
+Z_grid = predict(X_grid, theta, nu, sigma)
+z_space = Z_grid.reshape(x1_space.shape)
 
 ax.contour(x1_space, x2_space, z_space, levels=[0.5], colors="black")
 ax.set_xlabel("Вибрация")
 ax.set_ylabel("Неравномерность вращения")
-ax.set_title(f"Модель с {N} признаками")
+ax.set_title(f"Модель с полиномами степени {N}")
 ax.grid(True, alpha=0.5)
-ax.legend(["Неисправен", "Исправен"], loc="best")
+ax.legend(loc="best")
 
 plt.show()
