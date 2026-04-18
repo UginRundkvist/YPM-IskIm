@@ -1,24 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-N = 21  # теперь 21
+N = 21  
 
 def features_variant_2_fast(x):
-    """Быстрая генерация полиномиальных признаков для N=21"""
     m = x.shape[0]
     x1 = x[:, 1:2]
     x2 = x[:, 2:3]
     
-    # Предвычисляем все степени (эффективнее, чем считать каждый раз)
     x1_powers = [np.ones((m, 1))]
     x2_powers = [np.ones((m, 1))]
     
     for d in range(1, N + 1):
-        x1_powers.append(x1_powers[-1] * x1)  # степень d = степень d-1 * x1
+        x1_powers.append(x1_powers[-1] * x1)  
         x2_powers.append(x2_powers[-1] * x2)
     
-    # Собираем признаки
-    features = [x[:, 0:1]]  # bias
+    features = [x[:, 0:1]]  
     for i in range(N + 1):
         for j in range(N + 1):
             if i == 0 and j == 0:
@@ -41,7 +38,6 @@ def cost_gradient(theta, features, y, lambda_1, lambda_2):
 def train(x, y, iterations, alpha, lambda_1, lambda_2):
     features = features_variant_2_fast(x)
     
-    # Нормализация
     nu = np.zeros((features.shape[1], 1))
     sigma = np.ones((features.shape[1], 1))
     
@@ -63,8 +59,7 @@ def predict(x, theta, nu, sigma):
     features = (features - nu.T) / sigma.T
     return sigmoid(np.dot(features, theta))
 
-# ============ ОСНОВНАЯ ЧАСТЬ ============
-with open("C:/Users/1/Desktop/IskIn/YPM-IskIm/labe5/data.txt", "r") as file:
+with open("/home/zerd/all/YPM-IskIm/labe5/data.txt", "r") as file:
     data = np.array([line.strip().split(",") for line in file], dtype=float)
 
 x = np.hstack([np.ones((data.shape[0], 1)), data[:, :2]])
@@ -72,7 +67,6 @@ y = data[:, 2:3]
 
 theta, nu, sigma = train(x, y, 5000, 0.01, 0.0001, 0.0001)
 
-# Визуализация
 fig = plt.figure()
 ax = fig.add_subplot()
 
@@ -82,12 +76,10 @@ working = y[:, 0] <= 0.5
 ax.scatter(x[faulty, 1], x[faulty, 2], c="red", marker="o", label="Неисправен")
 ax.scatter(x[working, 1], x[working, 2], c="green", marker="o", label="Исправен")
 
-# БЫСТРАЯ визуализация границы решения
 x1_linspace = np.linspace(-4, 4, 150)
 x2_linspace = np.linspace(-4, 4, 150)
 x1_space, x2_space = np.meshgrid(x1_linspace, x2_linspace)
 
-# Векторизованное предсказание
 X_grid = np.column_stack([
     np.ones(x1_space.size),
     x1_space.ravel(),
