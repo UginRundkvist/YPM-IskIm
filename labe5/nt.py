@@ -85,7 +85,7 @@ def plot_decision_boundary(x, y, theta, nu, sigma, title, ax):
     ax.grid(True, alpha=0.5)
     ax.legend(loc="best")
 
-with open("C:/Users/1/Desktop/IskIn/YPM-IskIm/labe5/data.txt", "r") as file:
+with open("/home/zerd/all/YPM-IskIm/labe5/data.txt", "r") as file:
     data = np.array([line.strip().split(",") for line in file], dtype=float)
 
 x = np.hstack([np.ones((data.shape[0], 1)), data[:, :2]])
