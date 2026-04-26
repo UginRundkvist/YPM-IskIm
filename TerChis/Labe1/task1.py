@@ -1,228 +1,175 @@
 import math
 from decimal import Decimal, getcontext, ROUND_HALF_UP
 
-# Матрица A
-A = [
-    [math.sqrt(5), 2 * math.sqrt(3), 0.5, -1.4],
-    [-math.sqrt(3), -6 / math.sqrt(5), 3.2, 2.5],
+# Исходные данные
+A_matrix = [
+    [math.sqrt(5), 2*math.sqrt(3), 0.5, -1.4],
+    [-math.sqrt(3), -6/math.sqrt(5), 3.2, 2.5],
     [-1.1, 4.2, -3.2, 0.8],
     [7.9, -5.2, 0.3, 2.9]
 ]
+b_vector = [4.5, 0.7, 0.9, 6.2]
 
-# Вектор правой части b
-b = [4.5, 0.7, 0.9, 6.2]
-
+class GaussInterrupt(Exception):
+    pass
 
 def find_exact_solution():
-    A_exact = [row[:] for row in A]
-    b_exact = b[:]
+    A_ex = [row[:] for row in A_matrix]
+    b_ex = b_vector[:]
     n = 4
     
     for i in range(n):
-        max_row = i
-        max_val = abs(A_exact[i][i])
-        for k in range(i+1, n):
-            if abs(A_exact[k][i]) > max_val:
-                max_val = abs(A_exact[k][i])
-                max_row = k
+        max_row = max(range(i, n), key=lambda r: abs(A_ex[r][i]))
         if max_row != i:
-            A_exact[i], A_exact[max_row] = A_exact[max_row], A_exact[i]
-            b_exact[i], b_exact[max_row] = b_exact[max_row], b_exact[i]
+            A_ex[i], A_ex[max_row] = A_ex[max_row], A_ex[i]
+            b_ex[i], b_ex[max_row] = b_ex[max_row], b_ex[i]
         
         for j in range(i+1, n):
-            factor = A_exact[j][i] / A_exact[i][i]
+            factor = A_ex[j][i] / A_ex[i][i]
             for k in range(i, n):
-                A_exact[j][k] -= factor * A_exact[i][k]
-            b_exact[j] -= factor * b_exact[i]
+                A_ex[j][k] -= factor * A_ex[i][k]
+            b_ex[j] -= factor * b_ex[i]
     
-    # Обратный ход
-    x = [0] * n
+    x = [0]*n
     for i in range(n-1, -1, -1):
-        s = 0
-        for j in range(i+1, n):
-            s += A_exact[i][j] * x[j]
-        x[i] = (b_exact[i] - s) / A_exact[i][i]
+        s = sum(A_ex[i][j]*x[j] for j in range(i+1, n))
+        x[i] = (b_ex[i] - s) / A_ex[i][i]
     return x
 
-
-def print_system():
-    print("ИСХОДНАЯ СИСТЕМА УРАВНЕНИЙ")
-    for i in range(4):
-        print(f"{A[i][0]:8.4f} x1 + {A[i][1]:8.4f} x2 + {A[i][2]:8.4f} x3 + {A[i][3]:8.4f} x4 = {b[i]:8.4f}")
-
-class PrecisionSolver:
-    def __init__(self, A, b, decimal_places):
-        self.A_original = [row[:] for row in A]
-        self.b_original = b[:]
-        self.decimal_places = decimal_places
-        if decimal_places > 0:
-            getcontext().prec = decimal_places + 5
+class Solver:
+    def __init__(self, prec):
+        self.prec = prec 
+        if prec > 0:
+            getcontext().prec = prec + 10
+    
+    def _round(self, v):
+        if self.prec <= 0:
+            return v
         
-    def _round(self, value):
-        if self.decimal_places == -1:
-            return value
+        # Защита от очень маленьких чисел
+        if abs(v) < 1e-15:
+            return 0.0
+        
+        # Защита от inf и nan
+        if math.isnan(v) or math.isinf(v):
+            return 0.0
+        
         try:
-            # Преобразуем в строку с фиксированной точностью
-            d = Decimal(str(value)).quantize(Decimal(f'1e-{self.decimal_places}'), rounding=ROUND_HALF_UP)
+            # Преобразуем в строку с фиксированной точкой
+            d = Decimal(f"{v:.15f}").quantize(
+                Decimal(f'1e-{self.prec}'), 
+                rounding=ROUND_HALF_UP
+            )
             return float(d)
         except:
-            return value
+            return v
     
-    def gauss_standard(self):
+    def gauss(self, use_pivot=True):
         n = 4
-        A = [row[:] for row in self.A_original]
+        A = [row[:] for row in A_matrix]
         b = self.b_original[:]
         
         # Прямой ход
         for i in range(n):
-            if abs(A[i][i]) < 1e-12:
-                raise Exception(f"Нулевой диагональный элемент A[{i}][{i}] = {A[i][i]}")
+            if use_pivot:
+                max_row = max(range(i, n), key=lambda r: abs(A[r][i]))
+                if max_row != i:
+                    A[i], A[max_row] = A[max_row], A[i]
+                    b[i], b[max_row] = b[max_row], b[i]
+            
+            if abs(A[i][i]) < 1e-14:
+                raise GaussInterrupt(f"Нулевой элемент A[{i}][{i}]={A[i][i]:.2e}")
             
             for j in range(i+1, n):
+                if abs(A[i][i]) < 1e-14:
+                    raise GaussInterrupt(f"Деление на ноль на шаге {i}")
+                
                 factor = A[j][i] / A[i][i]
+                factor = self._round(factor)
+                
                 for k in range(i, n):
                     A[j][k] = A[j][k] - factor * A[i][k]
+                    A[j][k] = self._round(A[j][k])
+                
                 b[j] = b[j] - factor * b[i]
+                b[j] = self._round(b[j])
         
         # Обратный ход
-        x = [0] * n
+        x = [0]*n
         for i in range(n-1, -1, -1):
+            if abs(A[i][i]) < 1e-14:
+                raise GaussInterrupt(f"Нулевой элемент в обратном ходе A[{i}][{i}]={A[i][i]:.2e}")
+            
             s = 0
             for j in range(i+1, n):
                 s += A[i][j] * x[j]
+            s = self._round(s)
+            
             x[i] = (b[i] - s) / A[i][i]
-        
-        # Округляем результат после всех вычислений
-        if self.decimal_places > 0:
-            x = [self._round(v) for v in x]
+            x[i] = self._round(x[i])
         
         return x
     
-    def gauss_pivot(self):
-        """Метод Гаусса с выбором главного элемента"""
-        n = 4
-        A = [row[:] for row in self.A_original]
-        b = self.b_original[:]
-        
-        # Прямой ход с выбором главного элемента
-        for i in range(n):
-            # Поиск максимального элемента в столбце
-            max_row = i
-            max_val = abs(A[i][i])
-            for k in range(i+1, n):
-                if abs(A[k][i]) > max_val:
-                    max_val = abs(A[k][i])
-                    max_row = k
-            
-            if max_val < 1e-12:
-                raise Exception(f"Все элементы в столбце {i} близки к нулю")
-            
-            # Меняем строки местами
-            if max_row != i:
-                A[i], A[max_row] = A[max_row], A[i]
-                b[i], b[max_row] = b[max_row], b[i]
-            
-            for j in range(i+1, n):
-                factor = A[j][i] / A[i][i]
-                for k in range(i, n):
-                    A[j][k] = A[j][k] - factor * A[i][k]
-                b[j] = b[j] - factor * b[i]
-        
-        # Обратный ход
-        x = [0] * n
-        for i in range(n-1, -1, -1):
-            s = 0
-            for j in range(i+1, n):
-                s += A[i][j] * x[j]
-            x[i] = (b[i] - s) / A[i][i]
-        
-        # Округляем результат после всех вычислений
-        if self.decimal_places > 0:
-            x = [self._round(v) for v in x]
-        
-        return x
-    
-    def check_solution(self, x):
-        n = 4
+    def check(self, x):
         residuals = []
-        for i in range(n):
+        for i in range(4):
             s = 0
-            for j in range(n):
-                s += self.A_original[i][j] * x[j]
-            residuals.append(s - self.b_original[i])
-        return residuals
-
+            for j in range(4):
+                s += A_matrix[i][j] * x[j]
+            residuals.append(abs(s - b_vector[i]))
+        return max(residuals)
 
 def main():
-    print("РЕШЕНИЕ СЛАУ МЕТОДАМИ ГАУССА")
-    print("Вариант 16")
-    
-    print_system()
-    
-    # Находим точное решение для сравнения
     exact = find_exact_solution()
-    print("\n" + "="*60)
-    print("ЭТАЛОННОЕ РЕШЕНИЕ (с машинной точностью)")
-    print("="*60)
+    
+    print("СИСТЕМА УРАВНЕНИЙ")
     for i in range(4):
-        print(f"x{i+1} = {exact[i]:.10f}")
+        print(f"{i+1}: {A_matrix[i][0]:8.5f} x1 + {A_matrix[i][1]:8.5f} x2 + "
+              f"{A_matrix[i][2]:8.5f} x3 + {A_matrix[i][3]:8.5f} x4 = {b_vector[i]:5.2f}")
     
-    # Точности для исследования
-    precisions = [2, 4, 6, 10, -1]  # -1 = машинная точность
+    print(f"\nТОЧНОЕ РЕШЕНИЕ (машинная точность):")
+    for i, val in enumerate(exact):
+        print(f"  x{i+1} = {val:.12f}")
     
-    print("\n" + "="*60)
     print("РЕЗУЛЬТАТЫ РЕШЕНИЯ")
-    print("="*60)
     
-    # Для каждой точности
-    for prec in precisions:
-        print(f"\n--- Точность: {prec} знаков после запятой" if prec > 0 else "\n--- Точность: машинная точность")
-        print("-" * 50)
+    for prec in [2, 4, 6, 10, -1]:
+        prec_name = f"{prec} знаков" if prec > 0 else "машинная точность"
+        print(f"\n--- Точность: {prec_name} ---")
+        print("-"*50)
         
-        # Метод Гаусса без выбора
+        solver = Solver(prec)
+        solver.b_original = b_vector[:]
+        
+        # Метод без выбора
         try:
-            solver1 = PrecisionSolver(A, b, prec)
-            x1 = solver1.gauss_standard()
-            res1 = solver1.check_solution(x1)
-            max_res1 = max(abs(r) for r in res1)
+            x1 = solver.gauss(use_pivot=False)
+            err1 = solver.check(x1)
             
             print("Метод Гаусса (без выбора):")
-            if prec > 0:
-                print(f"  x1 = {x1[0]:.{prec}f}")
-                print(f"  x2 = {x1[1]:.{prec}f}")
-                print(f"  x3 = {x1[2]:.{prec}f}")
-                print(f"  x4 = {x1[3]:.{prec}f}")
-            else:
-                print(f"  x1 = {x1[0]:.10f}")
-                print(f"  x2 = {x1[1]:.10f}")
-                print(f"  x3 = {x1[2]:.10f}")
-                print(f"  x4 = {x1[3]:.10f}")
-            print(f"  Макс. невязка = {max_res1:.2e}")
-        except Exception as e:
-            print(f"Метод Гаусса (без выбора): ОШИБКА - {e}")
+            for i in range(4):
+                if prec > 0:
+                    print(f"  x{i+1} = {x1[i]:.{prec}f}")
+                else:
+                    print(f"  x{i+1} = {x1[i]:.10f}")
+            print(f"  Макс. невязка = {err1:.2e}")
+        except GaussInterrupt as e:
+            print(f"Метод Гаусса (без выбора): ПРЕРЫВАНИЕ - {e}")
         
-        # Метод Гаусса с выбором
+        # Метод с выбором
         try:
-            solver2 = PrecisionSolver(A, b, prec)
-            x2 = solver2.gauss_pivot()
-            res2 = solver2.check_solution(x2)
-            max_res2 = max(abs(r) for r in res2)
+            x2 = solver.gauss(use_pivot=True)
+            err2 = solver.check(x2)
             
             print("\nМетод Гаусса (с выбором главного элемента):")
-            if prec > 0:
-                print(f"  x1 = {x2[0]:.{prec}f}")
-                print(f"  x2 = {x2[1]:.{prec}f}")
-                print(f"  x3 = {x2[2]:.{prec}f}")
-                print(f"  x4 = {x2[3]:.{prec}f}")
-            else:
-                print(f"  x1 = {x2[0]:.10f}")
-                print(f"  x2 = {x2[1]:.10f}")
-                print(f"  x3 = {x2[2]:.10f}")
-                print(f"  x4 = {x2[3]:.10f}")
-            print(f"  Макс. невязка = {max_res2:.2e}")
-        except Exception as e:
-            print(f"Метод Гаусса (с выбором): ОШИБКА - {e}")
-
+            for i in range(4):
+                if prec > 0:
+                    print(f"  x{i+1} = {x2[i]:.{prec}f}")
+                else:
+                    print(f"  x{i+1} = {x2[i]:.10f}")
+            print(f"  Макс. невязка = {err2:.2e}")
+        except GaussInterrupt as e:
+            print(f"Метод Гаусса (с выбором): ПРЕРЫВАНИЕ - {e}")
 
 if __name__ == "__main__":
     main()
