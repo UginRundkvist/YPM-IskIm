@@ -32,7 +32,6 @@ def make_diagonally_dominant(A, b):
 
 def seidel_sor(A, b, omega, eps=1e-3, max_iter=500):
     n = len(A)
-    # Приведение к виду x = C*x + d
     C = [[0]*n for _ in range(n)]
     d = [0]*n
     for i in range(n):
@@ -60,7 +59,7 @@ def seidel_sor(A, b, omega, eps=1e-3, max_iter=500):
 def residual(A, b, x):
     return max(abs(sum(A[i][j]*x[j] for j in range(4)) - b[i]) for i in range(4))
 
-# ====== ОСНОВНОЙ КОД ======
+
 print("Исходная система:")
 for i in range(4):
     print(f"  {A[i][0]:2d}x1 + {A[i][1]:2d}x2 + {A[i][2]:2d}x3 + {A[i][3]:2d}x4 = {b[i]:2d}")

@@ -135,8 +135,7 @@ def main():
     
     for prec in [2, 4, 6, 10, -1]:
         prec_name = f"{prec} знаков" if prec > 0 else "машинная точность"
-        print(f"\n--- Точность: {prec_name} ---")
-        print("-"*50)
+        print(f"\nТочность: {prec_name}")
         
         solver = Solver(prec)
         solver.b_original = b_vector[:]
