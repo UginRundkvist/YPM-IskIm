@@ -41,7 +41,6 @@ def train(x, y, iterations, alpha, lambda_1, lambda_2):
     nu = np.zeros((features.shape[1], 1))
     sigma = np.ones((features.shape[1], 1))
     
-    m = features.shape[0]
     nu[1:] = np.mean(features, axis=0)[1:, None]
     diff = features - nu.T
     sigma[1:] = np.std(features, axis=0)[1:, None]
@@ -59,7 +58,13 @@ def predict(x, theta, nu, sigma):
     features = (features - nu.T) / sigma.T
     return sigmoid(np.dot(features, theta))
 
-def plot_decision_boundary(x, y, theta, nu, sigma, title, ax):
+def calculate_accuracy(x, y, theta, nu, sigma):
+    predictions = predict(x, theta, nu, sigma)
+    predictions_binary = (predictions >= 0.5).astype(int)
+    accuracy = np.mean(predictions_binary == y) * 100
+    return accuracy
+
+def plot_decision_boundary(x, y, theta, nu, sigma, title, ax, acc):
     faulty = y[:, 0] > 0.5
     working = y[:, 0] <= 0.5
     
@@ -75,43 +80,76 @@ def plot_decision_boundary(x, y, theta, nu, sigma, title, ax):
         x1_space.ravel(),
         x2_space.ravel()
     ])
+    
     Z_grid = predict(X_grid, theta, nu, sigma)
     z_space = Z_grid.reshape(x1_space.shape)
     
     ax.contour(x1_space, x2_space, z_space, levels=[0.5], colors="black", linewidths=2)
+    
     ax.set_xlabel("Вибрация")
     ax.set_ylabel("Неравномерность вращения")
-    ax.set_title(title)
+    ax.set_title(f"{title}\nAccuracy: {acc:.2f}%", fontsize=11)
     ax.grid(True, alpha=0.5)
     ax.legend(loc="best")
 
-with open("/home/zerd/all/YPM-IskIm/labe5/data.txt", "r") as file:
+with open("C:/Users/1/Desktop/IskIn/YPM-IskIm/labe5/data.txt", "r") as file:
     data = np.array([line.strip().split(",") for line in file], dtype=float)
 
 x = np.hstack([np.ones((data.shape[0], 1)), data[:, :2]])
 y = data[:, 2:3]
 
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+np.random.seed(42)
+indices = np.random.permutation(x.shape[0])
+split = int(0.7 * x.shape[0])
 
-print("Обучение без регуляризации...")
-theta_no_reg, nu_no_reg, sigma_no_reg = train(x, y, 5000, 0.01, 0.0, 0.0)
+train_idx = indices[:split]
+test_idx = indices[split:]
+
+x_train, y_train = x[train_idx], y[train_idx]
+x_test, y_test = x[test_idx], y[test_idx]
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+
+# 1. Без регуляризации
+theta_no_reg, nu_no_reg, sigma_no_reg = train(x_train, y_train, 5000, 0.01, 0.0, 0.0)
+test_acc_no_reg = calculate_accuracy(x_test, y_test, theta_no_reg, nu_no_reg, sigma_no_reg)
+print(f"Без регуляризации: {test_acc_no_reg:.2f}%")
+
+# 2. L2
+theta_l2, nu_l2, sigma_l2 = train(x_train, y_train, 5000, 0.01, 1, 0.0)
+test_acc_l2 = calculate_accuracy(x_test, y_test, theta_l2, nu_l2, sigma_l2)
+print(f"L2 (Ridge): {test_acc_l2:.2f}%")
+
+# 3. L1
+theta_l1, nu_l1, sigma_l1 = train(x_train, y_train, 5000, 0.01, 0.0, 0.5)
+test_acc_l1 = calculate_accuracy(x_test, y_test, theta_l1, nu_l1, sigma_l1)
+print(f"L1 (Lasso): {test_acc_l1:.2f}%")
+
+# 4. Elastic
+theta_elastic, nu_elastic, sigma_elastic = train(x_train, y_train, 5000, 0.01, 1, 0.5)
+test_acc_elastic = calculate_accuracy(x_test, y_test, theta_elastic, nu_elastic, sigma_elastic)
+print(f"Elastic Net: {test_acc_elastic:.2f}%")
+
+# ===== Графики =====
 plot_decision_boundary(x, y, theta_no_reg, nu_no_reg, sigma_no_reg, 
-                      "Без регуляризации (λ₁=0, λ₂=0)", axes[0, 0])
+                      "Без регуляризации", axes[0, 0], test_acc_no_reg)
 
-print("Обучение с L2 регуляризацией...")
-theta_l2, nu_l2, sigma_l2 = train(x, y, 5000, 0.01, 0.1, 0.0)
 plot_decision_boundary(x, y, theta_l2, nu_l2, sigma_l2, 
-                      "L2 регуляризация (λ₁=0.1, λ₂=0)", axes[0, 1])
+                      "L2 регуляризация", axes[0, 1], test_acc_l2)
 
-print("Обучение с L1 регуляризацией...")
-theta_l1, nu_l1, sigma_l1 = train(x, y, 5000, 0.01, 0.0, 0.05)
 plot_decision_boundary(x, y, theta_l1, nu_l1, sigma_l1, 
-                      "L1 регуляризация (λ₁=0, λ₂=0.05)", axes[1, 0])
+                      "L1 регуляризация", axes[1, 0], test_acc_l1)
 
-print("Обучение с комбинированной регуляризацией...")
-theta_elastic, nu_elastic, sigma_elastic = train(x, y, 5000, 0.01, 0.1, 0.05)
 plot_decision_boundary(x, y, theta_elastic, nu_elastic, sigma_elastic, 
-                      "Elastic Net (λ₁=0.1, λ₂=0.05)", axes[1, 1])
+                      "Elastic Net", axes[1, 1], test_acc_elastic)
 
+plt.suptitle(f"Сравнение методов регуляризации (N={N})", fontsize=16)
 plt.tight_layout()
 plt.show()
+
+accuracies = {
+    "Без регуляризации": test_acc_no_reg,
+    "L2 (Ridge)": test_acc_l2,
+    "L1 (Lasso)": test_acc_l1,
+    "Elastic Net": test_acc_elastic
+}
