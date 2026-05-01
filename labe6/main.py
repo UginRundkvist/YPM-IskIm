@@ -6,12 +6,11 @@ from scipy.optimize import minimize
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 
-data = sio.loadmat('C:/Users/1/Desktop/IskIn/YPM-IskIm/labe6/data.mat')
+data = sio.loadmat('/home/zerd/all/YPM-IskIm/labe6/data.mat')
 X = data['X'] 
 y = data['y'] 
-y[y == 10] = 0 
+y[y == 10] = 0
 
-X = X / 255.0 
 
 X = np.hstack([np.ones((X.shape[0], 1)), X])  
 
