@@ -92,7 +92,7 @@ def plot_decision_boundary(x, y, theta, nu, sigma, title, ax, acc):
     ax.grid(True, alpha=0.5)
     ax.legend(loc="best")
 
-with open("/home/zerd/all/YPM-IskIm/labe5/data.txt", "r") as file:
+with open("C:/Users/1/Desktop/IskIn/YPM-IskIm/labe5/data.txt", "r") as file:
     data = np.array([line.strip().split(",") for line in file], dtype=float)
 
 x = np.hstack([np.ones((data.shape[0], 1)), data[:, :2]])
@@ -108,84 +108,73 @@ test_idx = indices[split:]
 x_train, y_train = x[train_idx], y[train_idx]
 x_test, y_test = x[test_idx], y[test_idx]
 
-fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+fig, axes = plt.subplots(3, 3, figsize=(16, 14))
 
-# 1. Без регуляризации
+# Без регуляризации (базовый, будет переобучение)
 theta_no_reg, nu_no_reg, sigma_no_reg = train(x_train, y_train, 5000, 0.01, 0.0, 0.0)
+train_acc_no_reg = calculate_accuracy(x_train, y_train, theta_no_reg, nu_no_reg, sigma_no_reg)
 test_acc_no_reg = calculate_accuracy(x_test, y_test, theta_no_reg, nu_no_reg, sigma_no_reg)
-print(f"Без регуляризации: {test_acc_no_reg:.2f}%")
+print(f"Без регуляризации: train={train_acc_no_reg:.2f}%, test={test_acc_no_reg:.2f}%")
 
-# 2. L2
-theta_l2, nu_l2, sigma_l2 = train(x_train, y_train, 5000, 0.01, 1, 0.0)
+#L2
+theta_l2, nu_l2, sigma_l2 = train(x_train, y_train, 5000, 0.01, 1.0, 0.0)
 test_acc_l2 = calculate_accuracy(x_test, y_test, theta_l2, nu_l2, sigma_l2)
-print(f"L2 (Ridge): {test_acc_l2:.2f}%")
+train_acc_l2 = calculate_accuracy(x_train, y_train, theta_l2, nu_l2, sigma_l2)
+print(f"L2 (Ridge, λ=1.0): train={train_acc_l2:.2f}%, test={test_acc_l2:.2f}%")
 
-# 3. L1
+# L1 
 theta_l1, nu_l1, sigma_l1 = train(x_train, y_train, 5000, 0.01, 0.0, 0.5)
 test_acc_l1 = calculate_accuracy(x_test, y_test, theta_l1, nu_l1, sigma_l1)
-print(f"L1 (Lasso): {test_acc_l1:.2f}%")
+train_acc_l1 = calculate_accuracy(x_train, y_train, theta_l1, nu_l1, sigma_l1)
+print(f"L1 (Lasso, λ=0.5): train={train_acc_l1:.2f}%, test={test_acc_l1:.2f}%")
 
-# 4. Elastic
-theta_elastic, nu_elastic, sigma_elastic = train(x_train, y_train, 5000, 0.01, 1, 0.5)
+#Elastic Net 
+theta_elastic, nu_elastic, sigma_elastic = train(x_train, y_train, 5000, 0.01, 1.0, 0.5)
 test_acc_elastic = calculate_accuracy(x_test, y_test, theta_elastic, nu_elastic, sigma_elastic)
-print(f"Elastic Net: {test_acc_elastic:.2f}%")
+train_acc_elastic = calculate_accuracy(x_train, y_train, theta_elastic, nu_elastic, sigma_elastic)
+print(f"Elastic Net (L2=1.0, L1=0.5): train={train_acc_elastic:.2f}%, test={test_acc_elastic:.2f}%")
 
+#Слишком слабая L2
+theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2 = train(x_train, y_train, 5000, 0.01, 0.0001, 0.0)
+test_acc_overfit_l2 = calculate_accuracy(x_test, y_test, theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2)
+train_acc_overfit_l2 = calculate_accuracy(x_train, y_train, theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2)
+print(f"\nПЕРЕОБУЧЕНИЕ 1 (L2=0.0001): train={train_acc_overfit_l2:.2f}%, test={test_acc_overfit_l2:.2f}%")
 
-# 2. L2 переобучение
-theta_l2_pere, nu_l2_pere, sigma_l2_pere = train(x_train, y_train, 5000, 0.01, 100, 0.0)
-test_acc_l2 = calculate_accuracy(x_test, y_test, theta_l2, nu_l2, sigma_l2)
-print(f"L2 (Ridge) переобучение: {test_acc_l2:.2f}%")
+#Слишком слабая L1
+theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1 = train(x_train, y_train, 5000, 0.01, 0.0, 0.0001)
+test_acc_overfit_l1 = calculate_accuracy(x_test, y_test, theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1)
+train_acc_overfit_l1 = calculate_accuracy(x_train, y_train, theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1)
+print(f"ПЕРЕОБУЧЕНИЕ 2 (L1=0.0001): train={train_acc_overfit_l1:.2f}%, test={test_acc_overfit_l1:.2f}%")
 
-# 3. L1 переобучение
-theta_l1_pere, nu_l1_pere, sigma_l1_pere = train(x_train, y_train, 5000, 0.01, 0.0, 50)
-test_acc_l1 = calculate_accuracy(x_test, y_test, theta_l1, nu_l1, sigma_l1)
-print(f"L1 (Lasso) переобучение: {test_acc_l1:.2f}%")
+# Оба лямбда почти нулевые (сильное переобучение) 
+theta_overfit_both, nu_overfit_both, sigma_overfit_both = train(x_train, y_train, 5000, 0.01, 0.00001, 0.00001)
+test_acc_overfit_both = calculate_accuracy(x_test, y_test, theta_overfit_both, nu_overfit_both, sigma_overfit_both)
+train_acc_overfit_both = calculate_accuracy(x_train, y_train, theta_overfit_both, nu_overfit_both, sigma_overfit_both)
+print(f"ПЕРЕОБУЧЕНИЕ 3 (L2=0.00001, L1=0.00001): train={train_acc_overfit_both:.2f}%, test={test_acc_overfit_both:.2f}%")
 
-# 4. Elastic переобучение
-theta_elastic_pere, nu_elastic_pere, sigma_elastic_pere = train(x_train, y_train, 5000, 0.01, 100, 50)
-test_acc_elastic = calculate_accuracy(x_test, y_test, theta_elastic, nu_elastic, sigma_elastic)
-print(f"Elastic Net переобучение: {test_acc_elastic:.2f}%")
-
-# Графики
 plot_decision_boundary(x, y, theta_no_reg, nu_no_reg, sigma_no_reg, 
-                      "Без регуляризации", axes[0, 0], test_acc_no_reg)
+                      "Без регуляризации (базовый)", axes[0, 0], test_acc_no_reg)
 
 plot_decision_boundary(x, y, theta_l2, nu_l2, sigma_l2, 
-                      "L2 регуляризация", axes[0, 1], test_acc_l2)
+                      "L2 регуляризация (λ=1.0)", axes[0, 1], test_acc_l2)
 
 plot_decision_boundary(x, y, theta_l1, nu_l1, sigma_l1, 
-                      "L1 регуляризация", axes[1, 0], test_acc_l1)
+                      "L1 регуляризация (λ=0.5)", axes[0, 2], test_acc_l1)
 
 plot_decision_boundary(x, y, theta_elastic, nu_elastic, sigma_elastic, 
-                      "Elastic Net", axes[1, 1], test_acc_elastic)
+                      "Elastic Net (L2=1.0, L1=0.5)", axes[1, 0], test_acc_elastic)
 
+plot_decision_boundary(x, y, theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2, 
+                      "ПЕРЕОБУЧЕНИЕ 1 (L2=0.0001)", axes[1, 1], test_acc_overfit_l2)
 
-# переобучение
-plot_decision_boundary(x, y, theta_l2_pere, nu_l2_pere, sigma_l2_pere, 
-                      "L2 регуляризация переобучение", axes[0, 1], test_acc_l2)
+plot_decision_boundary(x, y, theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1, 
+                      "ПЕРЕОБУЧЕНИЕ 2 (L1=0.0001)", axes[1, 2], test_acc_overfit_l1)
 
-plot_decision_boundary(x, y, theta_l1_pere, nu_l1_pere, sigma_l1_pere, 
-                      "L1 регуляризация переобучение", axes[1, 0], test_acc_l1)
+plot_decision_boundary(x, y, theta_overfit_both, nu_overfit_both, sigma_overfit_both, 
+                      "ПЕРЕОБУЧЕНИЕ 3 (очень слабые λ)", axes[2, 1], test_acc_overfit_both)
 
-plot_decision_boundary(x, y, theta_elastic_pere, nu_elastic_pere, sigma_elastic_pere, 
-                      "Elastic Net переобучение", axes[1, 1], test_acc_elastic)
+axes[2, 0].set_visible(False)
+axes[2, 2].set_visible(False)
 
-
-
-
-
-
-
-
-
-
-plt.suptitle(f"Сравнение методов регуляризации (N={N})", fontsize=16)
 plt.tight_layout()
 plt.show()
-
-accuracies = {
-    "Без регуляризации": test_acc_no_reg,
-    "L2 (Ridge)": test_acc_l2,
-    "L1 (Lasso)": test_acc_l1,
-    "Elastic Net": test_acc_elastic
-}

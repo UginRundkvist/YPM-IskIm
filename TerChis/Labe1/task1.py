@@ -1,7 +1,7 @@
 import math
 from decimal import Decimal, getcontext, ROUND_HALF_UP
 
-# Исходные данные
+
 A_matrix = [
     [math.sqrt(5), 2*math.sqrt(3), 0.5, -1.4],
     [-math.sqrt(3), -6/math.sqrt(5), 3.2, 2.5],
@@ -46,11 +46,9 @@ class Solver:
         if self.prec <= 0:
             return v
         
-        # Защита от очень маленьких чисел
         if abs(v) < 1e-15:
             return 0.0
         
-        # Защита от inf и nan
         if math.isnan(v) or math.isinf(v):
             return 0.0
         
@@ -140,7 +138,6 @@ def main():
         solver = Solver(prec)
         solver.b_original = b_vector[:]
         
-        # Метод без выбора
         try:
             x1 = solver.gauss(use_pivot=False)
             err1 = solver.check(x1)
@@ -155,7 +152,6 @@ def main():
         except GaussInterrupt as e:
             print(f"Метод Гаусса (без выбора): ПРЕРЫВАНИЕ - {e}")
         
-        # Метод с выбором
         try:
             x2 = solver.gauss(use_pivot=True)
             err2 = solver.check(x2)
