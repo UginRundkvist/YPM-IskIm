@@ -92,7 +92,7 @@ def plot_decision_boundary(x, y, theta, nu, sigma, title, ax, acc):
     ax.grid(True, alpha=0.5)
     ax.legend(loc="best")
 
-with open("C:/Users/1/Desktop/IskIn/YPM-IskIm/labe5/data.txt", "r") as file:
+with open("/home/zerd/all/YPM-IskIm/labe5/data.txt", "r") as file:
     data = np.array([line.strip().split(",") for line in file], dtype=float)
 
 x = np.hstack([np.ones((data.shape[0], 1)), data[:, :2]])
@@ -134,20 +134,20 @@ test_acc_elastic = calculate_accuracy(x_test, y_test, theta_elastic, nu_elastic,
 train_acc_elastic = calculate_accuracy(x_train, y_train, theta_elastic, nu_elastic, sigma_elastic)
 print(f"Elastic Net (L2=1.0, L1=0.5): train={train_acc_elastic:.2f}%, test={test_acc_elastic:.2f}%")
 
-#Слишком слабая L2
-theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2 = train(x_train, y_train, 5000, 0.01, 0.0001, 0.0)
+#переобучене L2
+theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2 = train(x_train, y_train, 5000, 0.01, 1000, 0.0)
 test_acc_overfit_l2 = calculate_accuracy(x_test, y_test, theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2)
 train_acc_overfit_l2 = calculate_accuracy(x_train, y_train, theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2)
 print(f"\nПЕРЕОБУЧЕНИЕ 1 (L2=0.0001): train={train_acc_overfit_l2:.2f}%, test={test_acc_overfit_l2:.2f}%")
 
-#Слишком слабая L1
-theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1 = train(x_train, y_train, 5000, 0.01, 0.0, 0.0001)
+#переобучение L1
+theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1 = train(x_train, y_train, 5000, 0.01, 0.0, 500)
 test_acc_overfit_l1 = calculate_accuracy(x_test, y_test, theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1)
 train_acc_overfit_l1 = calculate_accuracy(x_train, y_train, theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1)
 print(f"ПЕРЕОБУЧЕНИЕ 2 (L1=0.0001): train={train_acc_overfit_l1:.2f}%, test={test_acc_overfit_l1:.2f}%")
 
-# Оба лямбда почти нулевые (сильное переобучение) 
-theta_overfit_both, nu_overfit_both, sigma_overfit_both = train(x_train, y_train, 5000, 0.01, 0.00001, 0.00001)
+# Оба лямбда большие(сильное переобучение) 
+theta_overfit_both, nu_overfit_both, sigma_overfit_both = train(x_train, y_train, 5000, 0.01, 1000, 500)
 test_acc_overfit_both = calculate_accuracy(x_test, y_test, theta_overfit_both, nu_overfit_both, sigma_overfit_both)
 train_acc_overfit_both = calculate_accuracy(x_train, y_train, theta_overfit_both, nu_overfit_both, sigma_overfit_both)
 print(f"ПЕРЕОБУЧЕНИЕ 3 (L2=0.00001, L1=0.00001): train={train_acc_overfit_both:.2f}%, test={test_acc_overfit_both:.2f}%")
@@ -165,13 +165,13 @@ plot_decision_boundary(x, y, theta_elastic, nu_elastic, sigma_elastic,
                       "Elastic Net (L2=1.0, L1=0.5)", axes[1, 0], test_acc_elastic)
 
 plot_decision_boundary(x, y, theta_overfit_l2, nu_overfit_l2, sigma_overfit_l2, 
-                      "ПЕРЕОБУЧЕНИЕ 1 (L2=0.0001)", axes[1, 1], test_acc_overfit_l2)
+                      "ПЕРЕОБУЧЕНИЕ 1 (L2=50)", axes[1, 1], test_acc_overfit_l2)
 
 plot_decision_boundary(x, y, theta_overfit_l1, nu_overfit_l1, sigma_overfit_l1, 
-                      "ПЕРЕОБУЧЕНИЕ 2 (L1=0.0001)", axes[1, 2], test_acc_overfit_l1)
+                      "ПЕРЕОБУЧЕНИЕ 2 (L1=10)", axes[1, 2], test_acc_overfit_l1)
 
 plot_decision_boundary(x, y, theta_overfit_both, nu_overfit_both, sigma_overfit_both, 
-                      "ПЕРЕОБУЧЕНИЕ 3 (очень слабые λ)", axes[2, 1], test_acc_overfit_both)
+                      "ПЕРЕОБУЧЕНИЕ 3 (очень большие λ)", axes[2, 1], test_acc_overfit_both)
 
 axes[2, 0].set_visible(False)
 axes[2, 2].set_visible(False)
