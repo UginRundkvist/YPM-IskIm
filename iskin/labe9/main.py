@@ -3,14 +3,16 @@ import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
+import pickle
+import os
 
 LAYER_SIZES = [400, 25, 15, 10]
 
-ALPHA = 1.5        # Скорость обучения
-LAMBDA_REG = 1.0   # Регуляризация
-STEPS = 2000       # Количество итераций
+ALPHA = 1.5
+LAMBDA_REG = 1.0
+STEPS = 2000
 
-TRAIN_SPLIT = 1000  # Сколько изображений оставить для теста
+TRAIN_SPLIT = 1000
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -35,12 +37,10 @@ def compute_cost_and_gradients(x_batch, y_batch, thetas, layer_sizes, lambda_reg
     m = x_batch.shape[0]
     num_layers = len(layer_sizes)
     
-    # Преобразуем y в one-hot
     y_onehot = np.zeros((m, layer_sizes[-1]))
     for i in range(m):
         y_onehot[i, int(y_batch[i, 0]) % 10] = 1
     
-    # Прямое распространение
     a = x_batch.T
     a_cache = []
     z_cache = []
@@ -56,16 +56,13 @@ def compute_cost_and_gradients(x_batch, y_batch, thetas, layer_sizes, lambda_reg
     h = a
     y = y_onehot.T
     
-    # Стоимость
     cost = np.sum(-y * np.log(h + 1e-15) - (1 - y) * np.log(1 - h + 1e-15)) / m
     
-    # Регуляризация
     reg = 0
     for theta in thetas:
         reg += np.sum(theta[:, 1:] ** 2)
     cost += (lambda_reg / (2 * m)) * reg
     
-    # Обратное распространение
     deltas = [0] * num_layers
     deltas[-1] = h - y
     
@@ -76,7 +73,6 @@ def compute_cost_and_gradients(x_batch, y_batch, thetas, layer_sizes, lambda_reg
         delta = np.dot(theta_no_bias.T, deltas[l + 1]) * sigmoid_gradient(z)
         deltas[l] = delta
     
-    # Градиенты
     gradients = []
     for l in range(num_layers - 1):
         d_matrix = np.dot(deltas[l + 1], a_cache[l].T) / m
@@ -87,15 +83,10 @@ def compute_cost_and_gradients(x_batch, y_batch, thetas, layer_sizes, lambda_reg
     return cost, gradients
 
 def train_network(x_train, y_train, thetas, layer_sizes, alpha, lambda_reg, steps):
-    print("Обучение начато")
-    
     for step in range(steps):
         cost, gradients = compute_cost_and_gradients(x_train, y_train, thetas, layer_sizes, lambda_reg)
-        
         for l in range(len(thetas)):
             thetas[l] -= alpha * gradients[l]
-    
-    print("Обучение завершено")
     return thetas
 
 def predict_one(x_input, thetas, layer_sizes):
@@ -118,11 +109,7 @@ def predict_batch(X, thetas, layer_sizes):
 
 print("ПОДГОТОВКА ДАННЫХ")
 print(f"Архитектура сети: {LAYER_SIZES}")
-print(f"Входной слой: {LAYER_SIZES[0]} нейронов (20×20 пикселей)")
-print(f"Выходной слой: {LAYER_SIZES[-1]} нейронов (цифры 0-9)")
-print(f"Скрытые слои: {LAYER_SIZES[1:-1]}")
 print()
-
 
 data = scipy.io.loadmat("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe9/data.mat")
 X = data["X"]
@@ -133,6 +120,7 @@ if y.ndim == 1 or y.shape[1] == 1:
 
 y[y == 10] = 0
 
+np.random.seed(42) 
 permutations = np.random.permutation(X.shape[0])
 X = X[permutations]
 y = y[permutations]
@@ -143,11 +131,21 @@ y_test, y_train = y[:TRAIN_SPLIT, :], y[TRAIN_SPLIT:, :]
 print(f"Обучающая выборка: {X_train.shape[0]} изображений")
 print(f"Тестовая выборка: {X_test.shape[0]} изображений\n")
 
-print("ОБУЧЕНИЕ НЕЙРОННОЙ СЕТИ")
-thetas = init_thetas(LAYER_SIZES)
-thetas = train_network(X_train, y_train, thetas, LAYER_SIZES, ALPHA, LAMBDA_REG, STEPS)
+WEIGHTS_FILE = "weights.pkl"
 
-print("\nТЕСТИРОВАНИЕ НЕЙРОННОЙ СЕТИ")
+if os.path.exists(WEIGHTS_FILE):
+    print("ЗАГРУЗКА ВЕСОВ")
+    with open(WEIGHTS_FILE, 'rb') as f:
+        thetas = pickle.load(f)
+else:
+    print("ОБУЧЕНИЕ НЕЙРОННОЙ СЕТИ")
+    thetas = init_thetas(LAYER_SIZES)
+    thetas = train_network(X_train, y_train, thetas, LAYER_SIZES, ALPHA, LAMBDA_REG, STEPS)
+    with open(WEIGHTS_FILE, 'wb') as f:
+        pickle.dump(thetas, f)
+    print("ОБУЧЕНИЕ ЗАВЕРШЕНО, ВЕСА СОХРАНЕНЫ\n")
+
+print("ТЕСТИРОВАНИЕ НЕЙРОННОЙ СЕТИ")
 
 y_pred = predict_batch(X_test, thetas, LAYER_SIZES)
 y_true = y_test.flatten()
