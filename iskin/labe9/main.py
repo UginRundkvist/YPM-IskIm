@@ -111,7 +111,7 @@ print("ПОДГОТОВКА ДАННЫХ")
 print(f"Архитектура сети: {LAYER_SIZES}")
 print()
 
-data = scipy.io.loadmat("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe9/data.mat")
+data = scipy.io.loadmat("/home/zerd/all/YPM-IskIm/iskin/labe9/data.mat")
 X = data["X"]
 y = data["y"]
 
