@@ -3,73 +3,73 @@ import scipy.io
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 
-LAYER_SIZES = [400, 25, 10]
+INPUT_SIZE = 400
+HIDDEN_SIZE = 25
+OUTPUT_SIZE = 10
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
-def predict_one(x_input, thetas, layer_sizes):
-    a = x_input.reshape(-1, 1)
-    num_layers = len(layer_sizes)
+def predict_one(x_input, theta1, theta2):
+    a1 = x_input.reshape(-1, 1)
     
-    for l in range(num_layers - 1):
-        a = np.vstack([np.ones((1, 1)), a])
-        z = np.dot(thetas[l], a)
-        a = sigmoid(z)
+    a1 = np.vstack([np.ones((1, 1)), a1]) 
     
-    return np.argmax(a)
+    z2 = np.dot(theta1, a1) 
+    a2 = sigmoid(z2)
+    
+    a2 = np.vstack([np.ones((1, 1)), a2]) 
+    
+    z3 = np.dot(theta2, a2) 
+    a3 = sigmoid(z3) 
+    
+    return (np.argmax(a3) + 1) % 10
 
-def predict_batch(X, thetas, layer_sizes):
+def predict_batch(X, theta1, theta2):
     predictions = []
     for i in range(X.shape[0]):
-        predictions.append(predict_one(X[i], thetas, layer_sizes))
+        predictions.append(predict_one(X[i], theta1, theta2))
     return np.array(predictions)
 
+print("ЗАГРУЗКА ДАННЫХ И ВЕСОВ")
+print(f"Архитектура сети: {INPUT_SIZE} -> {HIDDEN_SIZE} -> {OUTPUT_SIZE}")
+print()
 
-def load_theta_from_txt(filepath):
-    """Загрузка матрицы Theta из текстового файла"""
-    return np.loadtxt(filepath)
+try:
+    data = scipy.io.loadmat("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe7/data.mat")
+except:
+    print("Ошибка: файл data.mat не найден!")
+    exit(1)
 
-
-# 1. ЗАГРУЗКА ДАННЫХ
-print("Загрузка данных...")
-data = scipy.io.loadmat("/home/zerd/all/YPM-IskIm/iskin/labe9/data.mat")
 X = data["X"]
 y = data["y"]
 
 if y.ndim == 1 or y.shape[1] == 1:
     y = y.reshape(-1, 1)
 
-# Преобразуем метки (10 → 0)
 y[y == 10] = 0
+
+print(f"Всего изображений: {X.shape[0]}")
+
+try:
+    theta1 = np.loadtxt("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe7/Theta1.txt")
+    theta2 = np.loadtxt("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe7/Theta2.txt")
+    print("Веса успешно загружены\n")
+except:
+    print("Ошибка: файлы theta1.txt или theta2.txt не найдены!")
+    exit(1)
+
+print("ТЕСТИРОВАНИЕ НЕЙРОННОЙ СЕТИ")
+
+y_pred = predict_batch(X, theta1, theta2)
 y_true = y.flatten()
 
-print(f"Загружено {X.shape[0]} изображений\n")
-
-# 2. ЗАГРУЗКА ПРЕДОБУЧЕННЫХ ВЕСОВ ИЗ ТЕКСТОВЫХ ФАЙЛОВ
-print("Загрузка предобученных весов из текстовых файлов...")
-
-# Укажите правильные пути к вашим txt файлам
-Theta1 = load_theta_from_txt("/home/zerd/all/YPM-IskIm/iskin/labe7/Theta1.txt")
-Theta2 = load_theta_from_txt("/home/zerd/all/YPM-IskIm/iskin/labe7/Theta2.txt")
-
-thetas = [Theta1, Theta2]
-
-print(f"Theta1 shape: {Theta1.shape}")
-print(f"Theta2 shape: {Theta2.shape}\n")
-
-# 3. ПРЕДСКАЗАНИЕ
-print("Предсказание...")
-y_pred = predict_batch(X, thetas, LAYER_SIZES)
-
-# 4. ОЦЕНКА
 accuracy = np.mean(y_pred == y_true) * 100
-print(f"\nТОЧНОСТЬ НА ВСЕХ ДАННЫХ: {accuracy:.2f}%")
+print(f"\nТОЧНОСТЬ: {accuracy:.2f}%")
 
 print("\nОТЧЕТ ПО КАЖДОМУ КЛАССУ:")
 print(classification_report(y_true, y_pred, target_names=[str(i) for i in range(10)]))
 
-# 5. ВИЗУАЛИЗАЦИЯ (10 случайных примеров)
 fig, axes = plt.subplots(2, 5, figsize=(10, 5))
 fig.suptitle(f"Предсказания нейронной сети (точность: {accuracy:.1f}%)", fontsize=14)
 
