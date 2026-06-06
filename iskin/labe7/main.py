@@ -36,7 +36,7 @@ print(f"Архитектура сети: {INPUT_SIZE} -> {HIDDEN_SIZE} -> {OUTPU
 print()
 
 try:
-    data = scipy.io.loadmat("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe7/data.mat")
+    data = scipy.io.loadmat("/home/zerd/all/YPM-IskIm/iskin/labe7/data.mat")
 except:
     print("Ошибка: файл data.mat не найден!")
     exit(1)
@@ -52,8 +52,8 @@ y[y == 10] = 0
 print(f"Всего изображений: {X.shape[0]}")
 
 try:
-    theta1 = np.loadtxt("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe7/Theta1.txt")
-    theta2 = np.loadtxt("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe7/Theta2.txt")
+    theta1 = np.loadtxt("/home/zerd/all/YPM-IskIm/iskin/labe7/Theta1.txt")
+    theta2 = np.loadtxt("/home/zerd/all/YPM-IskIm/iskin/labe7/Theta2.txt")
     print("Веса успешно загружены\n")
 except:
     print("Ошибка: файлы theta1.txt или theta2.txt не найдены!")
