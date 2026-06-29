@@ -1,0 +1,1 @@
+#'C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/Kyrs_4_sem/WineQT.csv'

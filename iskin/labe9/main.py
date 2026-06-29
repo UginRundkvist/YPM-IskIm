@@ -1,171 +1,294 @@
-#C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe9/data.mat
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report
-import pickle
 import os
 
-LAYER_SIZES = [400, 25, 15, 10]
+LAYER_SIZES = [400, 25, 10]
 
 ALPHA = 1.5
 LAMBDA_REG = 1.0
 STEPS = 2000
-
-TRAIN_SPLIT = 1000
+TEST_SIZE = 1000
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
+
 
 def sigmoid_gradient(z):
     a = sigmoid(z)
     return a * (1 - a)
 
-def init_thetas(layer_sizes):
-    thetas = []
-    epsilon_init = 0.12
-    
-    for i in range(len(layer_sizes) - 1):
-        s_in = layer_sizes[i]
-        s_out = layer_sizes[i + 1]
-        theta = np.random.rand(s_out, s_in + 1) * 2 * epsilon_init - epsilon_init
-        thetas.append(theta)
-    
-    return thetas
+def class_to_num(n):
+    if n == 10:
+        return 10
+    return n
 
-def compute_cost_and_gradients(x_batch, y_batch, thetas, layer_sizes, lambda_reg):
-    m = x_batch.shape[0]
-    num_layers = len(layer_sizes)
-    
-    y_onehot = np.zeros((m, layer_sizes[-1]))
-    for i in range(m):
-        y_onehot[i, int(y_batch[i, 0]) % 10] = 1
-    
-    a = x_batch.T
-    a_cache = []
-    z_cache = []
-    
-    for l in range(num_layers - 1):
-        a = np.vstack([np.ones((1, m)), a])
+class ClassificationForwardNN:
+    def __init__(self, layer_sizes):
+        self.num_layers = len(layer_sizes)
+        self.layer_sizes = layer_sizes
+        self.thetas = []
+
+        epsilon_init = 0.12
+
+        for i in range(self.num_layers - 1):
+            s_in = layer_sizes[i]
+            s_out = layer_sizes[i + 1]
+
+            theta = (
+                np.random.rand(s_out, s_in + 1)
+                * 2
+                * epsilon_init
+                - epsilon_init
+            )
+
+            self.thetas.append(theta)
+
+    def compute_cost_and_gradients(self, x, y_per_class, lambda_reg):
+        m = x.shape[0]
+
+        a_cache = []
+        z_cache = []
+
+        a = x.T
+        for l in range(self.num_layers - 1):
+            a = np.vstack([np.ones((1, m)), a])
+
+            a_cache.append(a)
+
+            z = np.dot(self.thetas[l], a)
+
+            z_cache.append(z)
+
+            a = sigmoid(z)
+
         a_cache.append(a)
-        z = np.dot(thetas[l], a)
-        z_cache.append(z)
-        a = sigmoid(z)
-    
-    a_cache.append(a)
-    h = a
-    y = y_onehot.T
-    
-    cost = np.sum(-y * np.log(h + 1e-15) - (1 - y) * np.log(1 - h + 1e-15)) / m
-    
-    reg = 0
-    for theta in thetas:
-        reg += np.sum(theta[:, 1:] ** 2)
-    cost += (lambda_reg / (2 * m)) * reg
-    
-    deltas = [0] * num_layers
-    deltas[-1] = h - y
-    
-    for l in range(num_layers - 2, 0, -1):
-        theta = thetas[l]
-        theta_no_bias = theta[:, 1:]
-        z = z_cache[l - 1]
-        delta = np.dot(theta_no_bias.T, deltas[l + 1]) * sigmoid_gradient(z)
-        deltas[l] = delta
-    
-    gradients = []
-    for l in range(num_layers - 1):
-        d_matrix = np.dot(deltas[l + 1], a_cache[l].T) / m
-        reg_grad = (lambda_reg / m) * thetas[l]
-        reg_grad[:, 0] = 0
-        gradients.append(d_matrix + reg_grad)
-    
-    return cost, gradients
 
-def train_network(x_train, y_train, thetas, layer_sizes, alpha, lambda_reg, steps):
-    for step in range(steps):
-        cost, gradients = compute_cost_and_gradients(x_train, y_train, thetas, layer_sizes, lambda_reg)
-        for l in range(len(thetas)):
-            thetas[l] -= alpha * gradients[l]
-    return thetas
+        h = a
+        y = y_per_class.T
 
-def predict_one(x_input, thetas, layer_sizes):
-    a = x_input.reshape(-1, 1)
-    num_layers = len(layer_sizes)
-    
-    for l in range(num_layers - 1):
-        a = np.vstack([np.ones((1, 1)), a])
-        z = np.dot(thetas[l], a)
-        a = sigmoid(z)
-    
-    return np.argmax(a)
+        cost = np.sum(
+            -y * np.log(h + 1e-15)
+            - (1 - y) * np.log(1 - h + 1e-15)
+        ) / m
 
-def predict_batch(X, thetas, layer_sizes):
-    predictions = []
-    for i in range(X.shape[0]):
-        predictions.append(predict_one(X[i], thetas, layer_sizes))
-    return np.array(predictions)
+        reg = 0
+
+        for theta in self.thetas:
+            reg += np.sum(theta[:, 1:] ** 2)
+
+        cost += (lambda_reg / (2 * m)) * reg
+
+        deltas = [0] * self.num_layers
+
+        deltas[-1] = h - y
+
+        for l in range(self.num_layers - 2, 0, -1):
+            theta = self.thetas[l]
+            theta_no_bias = theta[:, 1:]
+
+            z = z_cache[l - 1]
+
+            deltas[l] = (
+                np.dot(theta_no_bias.T, deltas[l + 1]) * sigmoid_gradient(z)
+            )
+
+        gradients = []
+
+        for l in range(self.num_layers - 1):
+            grad = (
+                np.dot(deltas[l + 1], a_cache[l].T)
+                / m
+            )
+
+            reg_grad = (lambda_reg / m) * self.thetas[l]
+            reg_grad[:, 0] = 0
+
+            gradients.append(grad + reg_grad)
+
+        return cost, gradients
+
+    def train(self, x, y, alpha, lambda_reg, steps):
+        m = x.shape[0]
+
+        y_per_class = np.zeros((m, self.layer_sizes[-1]))
+
+        for i in range(m):
+            y_per_class[i, y[i, 0] % 10] = 1
+
+        print("Градиентный спуск начат")
+        print("------------------------------------")
+        print(" Шаг   | Значение функции стоимости ")
+        print("------------------------------------")
+
+        for step in range(steps):
+            cost, gradients = self.compute_cost_and_gradients(
+                x,
+                y_per_class,
+                lambda_reg
+            )
+
+            for l in range(len(self.thetas)):
+                self.thetas[l] -= alpha * gradients[l]
+
+            if step % 250 == 0:
+                print(f" {step:<6}| {cost:.4f}")
 
 
-print("ПОДГОТОВКА ДАННЫХ")
-print(f"Архитектура сети: {LAYER_SIZES}")
-print()
+    def predict(self, x):
+        a = x
 
-data = scipy.io.loadmat("/home/zerd/all/YPM-IskIm/iskin/labe9/data.mat")
-X = data["X"]
+        for l in range(self.num_layers - 1):
+            a = np.vstack([np.ones((1, 1)), a])
+
+            z = np.dot(self.thetas[l], a)
+
+            a = sigmoid(z)
+
+        return a
+
+    def save_weights(self, filename):
+        with open(filename, "w") as f:
+            f.write(f"{len(self.layer_sizes)}\n")
+            f.write(" ".join(map(str, self.layer_sizes)) + "\n")
+
+            for theta in self.thetas:
+                np.savetxt(f, theta.flatten(), newline=" ")
+                f.write("\n")
+                
+    def load_weights(self, filename):
+        self.thetas = []
+
+        with open(filename, "r") as f:
+            lines = f.readlines()
+
+            self.num_layers = int(lines[0].strip())
+            self.layer_sizes = list(map(int, lines[1].strip().split()))
+
+            for i in range(self.num_layers - 1):
+                s_in = self.layer_sizes[i]
+                s_out = self.layer_sizes[i + 1]
+
+                theta_flat = np.array(
+                    list(map(float, lines[i + 2].strip().split()))
+                )
+
+                theta = theta_flat.reshape((s_out, s_in + 1))
+
+                self.thetas.append(theta)          
+
+
+
+data = scipy.io.loadmat("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe9/data.mat")
+
+x = data["X"]
 y = data["y"]
 
-if y.ndim == 1 or y.shape[1] == 1:
-    y = y.reshape(-1, 1)
+print("Размер исходного набора данных:")
+print(x.shape)
 
-y[y == 10] = 0
+permutations = np.random.permutation(x.shape[0])
 
-np.random.seed(42) 
-permutations = np.random.permutation(X.shape[0])
-X = X[permutations]
+x = x[permutations]
 y = y[permutations]
 
-X_test, X_train = X[:TRAIN_SPLIT, :], X[TRAIN_SPLIT:, :]
-y_test, y_train = y[:TRAIN_SPLIT, :], y[TRAIN_SPLIT:, :]
 
-print(f"Обучающая выборка: {X_train.shape[0]} изображений")
-print(f"Тестовая выборка: {X_test.shape[0]} изображений\n")
+x_test = x[:TEST_SIZE]
+y_test = y[:TEST_SIZE]
 
-WEIGHTS_FILE = "weights.pkl"
+x_train = x[TEST_SIZE:]
+y_train = y[TEST_SIZE:]
+
+print("\nОбучающая выборка:")
+print(x_train.shape)
+
+print("\nТестовая выборка:")
+print(x_test.shape)
+
+WEIGHTS_FILE = "weights.txt"
+
+nn = ClassificationForwardNN(LAYER_SIZES)
 
 if os.path.exists(WEIGHTS_FILE):
-    print("ЗАГРУЗКА ВЕСОВ")
-    with open(WEIGHTS_FILE, 'rb') as f:
-        thetas = pickle.load(f)
+    print(f"\nНайден файл {WEIGHTS_FILE}")
+    print("Загрузка сохранённых весов...")
+
+    nn.load_weights(WEIGHTS_FILE)
+
+    print("Веса успешно загружены")
+
 else:
-    print("ОБУЧЕНИЕ НЕЙРОННОЙ СЕТИ")
-    thetas = init_thetas(LAYER_SIZES)
-    thetas = train_network(X_train, y_train, thetas, LAYER_SIZES, ALPHA, LAMBDA_REG, STEPS)
-    with open(WEIGHTS_FILE, 'wb') as f:
-        pickle.dump(thetas, f)
-    print("ОБУЧЕНИЕ ЗАВЕРШЕНО, ВЕСА СОХРАНЕНЫ\n")
+    print("\nФайл весов не найден")
+    print("Начинается обучение сети...")
 
-print("ТЕСТИРОВАНИЕ НЕЙРОННОЙ СЕТИ")
+    nn.train(
+        x_train,
+        y_train,
+        ALPHA,
+        LAMBDA_REG,
+        STEPS
+    )
 
-y_pred = predict_batch(X_test, thetas, LAYER_SIZES)
-y_true = y_test.flatten()
+    nn.save_weights(WEIGHTS_FILE)
 
-accuracy = np.mean(y_pred == y_true) * 100
-print(f"\nТОЧНОСТЬ: {accuracy:.2f}%")
+    print(f"\nВеса сохранены в {WEIGHTS_FILE}")
+    print("Обучение завершено")
+    
+correct = 0
 
-print("\nОТЧЕТ ПО КАЖДОМУ КЛАССУ:")
-print(classification_report(y_true, y_pred, target_names=[str(i) for i in range(10)]))
+for i in range(len(x_test)):
+    x_input = x_test[i].reshape(-1, 1)
 
-fig, axes = plt.subplots(2, 5, figsize=(10, 5))
-fig.suptitle(f"Предсказания нейронной сети (точность: {accuracy:.1f}%)", fontsize=14)
+    result = nn.predict(x_input)
 
-for i, ax in enumerate(axes.flat):
-    idx = np.random.randint(0, len(X_test))
-    ax.imshow(X_test[idx].reshape(20, 20).T, cmap='gray')
-    color = 'green' if y_true[idx] == y_pred[idx] else 'red'
-    ax.set_title(f'True: {int(y_true[idx])}\nPred: {y_pred[idx]}', 
-                 color=color, fontsize=10)
-    ax.axis('off')
+    prediction = np.argmax(result)
+
+    real_digit = y_test[i, 0] % 10
+
+    if prediction == real_digit:
+        correct += 1
+
+accuracy = correct / len(x_test) * 100
+
+print("\n======================")
+print("РЕЗУЛЬТАТ ТЕСТИРОВАНИЯ")
+print("======================")
+
+print(f"Правильных ответов: {correct} из {len(x_test)}")
+print(f"Точность сети: {accuracy:.2f}%")
+
+fig, axes = plt.subplots(3, 4, figsize=(10, 5))
+fig.suptitle("Предсказания нейронной сети")
+
+for i, ax in enumerate(axes.flatten()):
+    x_input = x_test[i].reshape(-1, 1)
+
+    result = nn.predict(x_input)
+
+    prediction = np.argmax(result)
+
+    sorted_result = np.sort(result[:, 0])
+
+    if abs(sorted_result[-1] - sorted_result[-2]) < 0.1:
+        prediction_str = "неясно"
+    else:
+        prediction_str = str(class_to_num(prediction))
+
+    ax.imshow(
+        x_test[i].reshape(20, 20).T,
+        cmap="gray",
+        vmin=0,
+        vmax=1
+    )
+
+    real_digit = class_to_num(y_test[i, 0] % 10)
+
+    ax.set_title(
+        f'Цифра: "{real_digit}"\n'
+        f'Предсказание: "{prediction_str}"'
+    )
+
+    ax.axis("off")
 
 plt.tight_layout()
 plt.show()
