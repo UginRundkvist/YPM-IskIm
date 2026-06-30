@@ -10,7 +10,7 @@ import os
 np.random.seed(42)
 random.seed(42)
 
-df = pd.read_csv('C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/Kyrs_4_sem/WineQT.csv', sep=';')
+df = pd.read_csv('/home/zerd/all/YPM-IskIm/iskin/Kyrs_4_sem/WineQT.csv', sep=';')
 
 print(f"\nИсходный размер датасета: {df.shape}")
 print(f"Колонки: {df.columns.tolist()}")
@@ -41,6 +41,7 @@ def to_one_hot(y, num_classes):
 
 y_shifted = y_raw - min(unique_classes)
 y_onehot = to_one_hot(y_shifted, n_classes)
+
 
 
 X_train_raw, X_temp, y_train_labels, y_temp = train_test_split(
@@ -188,7 +189,7 @@ def run_experiment(X_data, y_data, X_v, y_v, opt_mode, init_method, act_method,
     
     return nn, train_losses, val_losses
 
-opt_options = ['mini_batch', 'batch']  
+opt_options = ['mini_batch']  
 init_options = ['he', 'xavier']
 act_options = ['relu', 'tanh']
 dropout_options = [0.1, 0.2]

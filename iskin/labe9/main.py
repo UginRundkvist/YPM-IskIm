@@ -117,9 +117,7 @@ class ClassificationForwardNN:
             y_per_class[i, y[i, 0] % 10] = 1
 
         print("Градиентный спуск начат")
-        print("------------------------------------")
         print(" Шаг   | Значение функции стоимости ")
-        print("------------------------------------")
 
         for step in range(steps):
             cost, gradients = self.compute_cost_and_gradients(
@@ -179,7 +177,7 @@ class ClassificationForwardNN:
 
 
 
-data = scipy.io.loadmat("C:/Users/1/Desktop/IskIn/YPM-IskIm/iskin/labe9/data.mat")
+data = scipy.io.loadmat("/home/zerd/all/YPM-IskIm/iskin/labe9/data.mat")
 
 x = data["X"]
 y = data["y"]
@@ -249,10 +247,6 @@ for i in range(len(x_test)):
         correct += 1
 
 accuracy = correct / len(x_test) * 100
-
-print("\n======================")
-print("РЕЗУЛЬТАТ ТЕСТИРОВАНИЯ")
-print("======================")
 
 print(f"Правильных ответов: {correct} из {len(x_test)}")
 print(f"Точность сети: {accuracy:.2f}%")
