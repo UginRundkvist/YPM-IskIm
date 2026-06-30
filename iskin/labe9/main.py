@@ -13,7 +13,7 @@ TEST_SIZE = 1000
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
-
+#производная
 def sigmoid_gradient(z):
     a = sigmoid(z)
     return a * (1 - a)
@@ -25,6 +25,7 @@ def class_to_num(n):
 
 class ClassificationForwardNN:
     def __init__(self, layer_sizes):
+        
         self.num_layers = len(layer_sizes)
         self.layer_sizes = layer_sizes
         self.thetas = []
@@ -34,76 +35,54 @@ class ClassificationForwardNN:
         for i in range(self.num_layers - 1):
             s_in = layer_sizes[i]
             s_out = layer_sizes[i + 1]
-
-            theta = (
-                np.random.rand(s_out, s_in + 1)
-                * 2
-                * epsilon_init
-                - epsilon_init
-            )
-
+            theta = (np.random.rand(s_out, s_in + 1)  * 2  * epsilon_init - epsilon_init)
             self.thetas.append(theta)
 
     def compute_cost_and_gradients(self, x, y_per_class, lambda_reg):
         m = x.shape[0]
-
         a_cache = []
         z_cache = []
 
         a = x.T
         for l in range(self.num_layers - 1):
             a = np.vstack([np.ones((1, m)), a])
-
             a_cache.append(a)
-
+            
             z = np.dot(self.thetas[l], a)
-
             z_cache.append(z)
-
             a = sigmoid(z)
 
         a_cache.append(a)
-
+        
         h = a
         y = y_per_class.T
 
-        cost = np.sum(
-            -y * np.log(h + 1e-15)
-            - (1 - y) * np.log(1 - h + 1e-15)
-        ) / m
-
+        cost = np.sum( -y * np.log(h + 1e-15) - (1 - y) * np.log(1 - h + 1e-15)) / m
         reg = 0
 
         for theta in self.thetas:
             reg += np.sum(theta[:, 1:] ** 2)
 
         cost += (lambda_reg / (2 * m)) * reg
-
-        deltas = [0] * self.num_layers
-
-        deltas[-1] = h - y
+        
+        layers_miss = [0] * self.num_layers
+        layers_miss[-1] = h - y
 
         for l in range(self.num_layers - 2, 0, -1):
             theta = self.thetas[l]
             theta_no_bias = theta[:, 1:]
-
             z = z_cache[l - 1]
-
-            deltas[l] = (
-                np.dot(theta_no_bias.T, deltas[l + 1]) * sigmoid_gradient(z)
+            layers_miss[l] = (
+                np.dot(theta_no_bias.T, layers_miss[l + 1]) * sigmoid_gradient(z)
             )
 
         gradients = []
 
         for l in range(self.num_layers - 1):
-            grad = (
-                np.dot(deltas[l + 1], a_cache[l].T)
-                / m
-            )
+            grad = ( np.dot(layers_miss[l + 1], a_cache[l].T) / m)
 
             reg_grad = (lambda_reg / m) * self.thetas[l]
             reg_grad[:, 0] = 0
-
             gradients.append(grad + reg_grad)
 
         return cost, gradients
@@ -120,11 +99,7 @@ class ClassificationForwardNN:
         print(" Шаг   | Значение функции стоимости ")
 
         for step in range(steps):
-            cost, gradients = self.compute_cost_and_gradients(
-                x,
-                y_per_class,
-                lambda_reg
-            )
+            cost, gradients = self.compute_cost_and_gradients(x,  y_per_class,  lambda_reg)
 
             for l in range(len(self.thetas)):
                 self.thetas[l] -= alpha * gradients[l]
@@ -138,9 +113,7 @@ class ClassificationForwardNN:
 
         for l in range(self.num_layers - 1):
             a = np.vstack([np.ones((1, 1)), a])
-
             z = np.dot(self.thetas[l], a)
-
             a = sigmoid(z)
 
         return a
@@ -209,11 +182,9 @@ nn = ClassificationForwardNN(LAYER_SIZES)
 
 if os.path.exists(WEIGHTS_FILE):
     print(f"\nНайден файл {WEIGHTS_FILE}")
-    print("Загрузка сохранённых весов...")
 
     nn.load_weights(WEIGHTS_FILE)
 
-    print("Веса успешно загружены")
 
 else:
     print("\nФайл весов не найден")
@@ -230,19 +201,15 @@ else:
     nn.save_weights(WEIGHTS_FILE)
 
     print(f"\nВеса сохранены в {WEIGHTS_FILE}")
-    print("Обучение завершено")
     
 correct = 0
 
 for i in range(len(x_test)):
     x_input = x_test[i].reshape(-1, 1)
-
     result = nn.predict(x_input)
-
+    
     prediction = np.argmax(result)
-
     real_digit = y_test[i, 0] % 10
-
     if prediction == real_digit:
         correct += 1
 
