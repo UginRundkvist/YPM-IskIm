@@ -95,9 +95,6 @@ class ClassificationForwardNN:
         for i in range(m):
             y_per_class[i, y[i, 0] % 10] = 1
 
-        print("Градиентный спуск начат")
-        print(" Шаг   | Значение функции стоимости ")
-
         for step in range(steps):
             cost, gradients = self.compute_cost_and_gradients(x,  y_per_class,  lambda_reg)
 
